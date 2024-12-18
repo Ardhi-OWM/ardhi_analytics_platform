@@ -1,5 +1,9 @@
 import { ThemeProvider } from "next-themes";
-import { ClerkProvider } from "@clerk/clerk-react";
+import {
+  ClerkProvider,UserButton , SignedIn,
+  // SignedOut, SignInButton
+}
+  from '@clerk/nextjs'
 
 import './globals.css'
 import { Space_Grotesk } from "next/font/google";
@@ -21,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || ""}>
+    <ClerkProvider>
       <html lang="en" className={spaceGrotesk.className} suppressHydrationWarning>
         <body className="bg-background text-foreground">
           <ThemeProvider
@@ -30,6 +34,13 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <header className="flex justify-between items-center p-4">
+              <nav>
+                <SignedIn>
+                  <UserButton />
+                </SignedIn>
+              </nav>
+            </header>
             {children}
           </ThemeProvider>
         </body>
