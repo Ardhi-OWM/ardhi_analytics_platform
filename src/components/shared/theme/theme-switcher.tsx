@@ -31,15 +31,27 @@ const ThemeSwitcher = () => {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size={"sm"}>
+                <Button variant="ghost" size={"sm"} className="border-none  hover:bg-transparent">
                     {(() => {
                         let IconComponent;
                         if (theme === "light") {
-                            IconComponent = <Sun key="light" size={ICON_SIZE} className={"text-muted-foreground"} />;
+                            IconComponent = (
+                                <div className="border rounded-full p-2  hover:bg-green-500/[.25]">
+                                    <Sun key="light" size={ICON_SIZE} className="text-muted-foreground" />
+                                </div>
+                            );
                         } else if (theme === "dark") {
-                            IconComponent = <Moon key="dark" size={ICON_SIZE} className={"text-muted-foreground"} />;
+                            IconComponent = (
+                                <div className="border rounded-full p-2 hover:bg-green-500/[.25]">
+                                    <Moon key="dark" size={ICON_SIZE} className="text-muted-foreground" />
+                                </div>
+                            );
                         } else {
-                            IconComponent = <Laptop key="system" size={ICON_SIZE} className={"text-muted-foreground"} />;
+                            IconComponent = (
+                                <div className="border rounded-full p-2 hover:bg-green-500/[.25]">
+                                    <Laptop key="system" size={ICON_SIZE} className="text-muted-foreground" />
+                                </div>
+                            );
                         }
                         return IconComponent;
                     })()}

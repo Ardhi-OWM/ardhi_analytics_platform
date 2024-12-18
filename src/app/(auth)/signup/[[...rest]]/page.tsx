@@ -15,7 +15,7 @@ export default function SignUpPage() {
             <div className="flex flex-row gap-1 text-sm">
                 <p>Already a user?</p>
                 <Link
-                    href="/sign-in"
+                    href="/signin"
                     className="text-green-700 underline font-semibold"
                 >
                     SIGN IN HERE.

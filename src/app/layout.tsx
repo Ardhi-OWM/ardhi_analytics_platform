@@ -1,15 +1,9 @@
 import { ThemeProvider } from "next-themes";
-import {
-  ClerkProvider,UserButton , SignedIn,
-  // SignedOut, SignInButton
-}
-  from '@clerk/nextjs'
-  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
-
-import './globals.css'
+import { ClerkProvider} from '@clerk/nextjs'
 import { Space_Grotesk } from "next/font/google";
 
+import './globals.css'
+import Header from "@/components/shared/header/Header";
 
 export const metadata = {
   title: "Ardhi App",
@@ -27,6 +21,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
   return (
     <ClerkProvider publishableKey={publishableKey}>
       <html lang="en" className={spaceGrotesk.className} suppressHydrationWarning>
@@ -37,13 +34,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <header className="flex justify-between items-center p-4">
-              <nav>
-                <SignedIn>
-                  <UserButton />
-                </SignedIn>
-              </nav>
-            </header>
+            <Header />
             {children}
           </ThemeProvider>
         </body>
