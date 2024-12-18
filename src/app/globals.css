@@ -90,8 +90,15 @@ body {
   }
 }
 
+/* Reduce Leaflet container z-index */
+.leaflet-container {
+  z-index: 0 !important;
+}
 
-
+/* Reduce Leaflet controls z-index */
+.leaflet-control {
+  z-index: 10 !important;
+}
 
 /* ----------------- FONT STYLE ----------------- */
 /* -- roboto-mono-- */

@@ -4,6 +4,7 @@ import { Space_Grotesk } from "next/font/google";
 
 import './globals.css'
 import Header from "@/components/shared/header/Header";
+import Footer from "@/components/shared/footer/Footer";
 
 export const metadata = {
   title: "Ardhi App",
@@ -36,6 +37,7 @@ export default function RootLayout({
           >
             <Header />
             {children}
+            <Footer />
           </ThemeProvider>
         </body>
       </html>
