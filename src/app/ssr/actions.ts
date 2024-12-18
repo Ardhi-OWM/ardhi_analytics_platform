@@ -11,8 +11,12 @@ export async function addTask(name: string) {
         })
 
         console.log('Task successfully added!', response)
-    } catch (error: any) {
-        console.error('Error adding task:', error.message)
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error adding task:', error.message)
+        } else {
+            console.error('Error adding task:', error)
+        }
         throw new Error('Failed to add task')
     }
 }
