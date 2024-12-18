@@ -21,6 +21,7 @@ const spaceGrotesk = Space_Grotesk({
   fallback: ["sans-serif"],
 });
 
+
 export default function RootLayout({
   children,
 }: Readonly<{
