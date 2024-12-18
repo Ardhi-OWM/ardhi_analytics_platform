@@ -4,6 +4,8 @@ import {
   // SignedOut, SignInButton
 }
   from '@clerk/nextjs'
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
 
 import './globals.css'
 import { Space_Grotesk } from "next/font/google";
@@ -25,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider publishableKey={publishableKey}>
       <html lang="en" className={spaceGrotesk.className} suppressHydrationWarning>
         <body className="bg-background text-foreground">
           <ThemeProvider
