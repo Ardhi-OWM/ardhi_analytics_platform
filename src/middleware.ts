@@ -31,7 +31,7 @@ export const config = {
         '/converter',           // Matches /converter
         '/api-connections',     // Matches /api-connections
         // Ensure auth routes are excluded
-        '/((?!signin|signup|signout).*)', // Exclude /signin, /signup, and /signout
+        '/((?!signin|signup).*)', // Exclude /signin, /signup, and /signout
         '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
         '/(api|trpc)(.*)',
     ],
