@@ -99,7 +99,33 @@ body {
 .leaflet-control {
   z-index: 10 !important;
 }
+/*------------------------------- Footer & Header ------------------------------*/
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background-image: radial-gradient(
+    rgba(0, 0, 0, 0) 1px,
+    var(--background) 1px
+  );
+  background-size: 4px 4px;
+  backdrop-filter: blur(3px);
+  font-size: 14px;
+  line-height: 14px;
+}
 
+footer::before {
+  display: block;
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  opacity: 0.2;
+}
 /* ----------------- FONT STYLE ----------------- */
 /* -- roboto-mono-- */
 .roboto-mono-thin {

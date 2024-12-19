@@ -9,7 +9,7 @@ export default function Header() {
 
     return (
         <SignedIn>
-            <header className="w-full fixed top-0 left-0 z-100 border-b border-gray-500/[.25] shadow-lg">
+            <header className="w-full fixed top-0 left-0 z-100 border-b border-gray-500/[.25] shadow-lg z-[1000]">
                 <div className="flex items-center flex-row justify-between mx-2">
                     <div className="my-2">
                         <Link href="/" >
