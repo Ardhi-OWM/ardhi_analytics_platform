@@ -1,7 +1,7 @@
 
 'use client';
 import React, { useState } from 'react';
-import { MapContainer, TileLayer } from 'react-leaflet';
+/* import { MapContainer, TileLayer } from 'react-leaflet'; */
 import 'leaflet/dist/leaflet.css';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -24,7 +24,7 @@ export default function MapComponent() {
                 >
                     {/* Dynamically render the icon based on sidebar state */}
                     {sidebarOpen ? (
-                        <PanelRightOpen  className="text-muted-foreground"/>
+                        <PanelRightOpen className="text-muted-foreground" />
                     ) : (
                         <PanelLeftOpen className="text-muted-foreground" />
                     )}
@@ -32,14 +32,17 @@ export default function MapComponent() {
 
                 {sidebarOpen && (
                     <Box className="mt-2">
-                        <p> <NotificationsIcon/> Notification</p>
+                        <p> <NotificationsIcon /> Notification</p>
                     </Box>
                 )}
             </div>
 
             {/* Main Map Area */}
             <div style={{ flex: 1 }}>
-                <MapContainer
+                <div className="flex justify-between items-center p-4">
+                    <h1 className="text-2xl font-bold">This is a map compoenet</h1>
+
+                    {/*  <MapContainer
                     center={[52.520008, 13.404954]}
                     zoom={13}
                     style={{ height: '70%', width: '100%' }}
@@ -49,7 +52,8 @@ export default function MapComponent() {
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
-                </MapContainer>
+                </MapContainer> */}
+                </div>
             </div>
         </div>
     );
