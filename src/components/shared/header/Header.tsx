@@ -9,7 +9,7 @@ export default function Header() {
 
     return (
         <SignedIn>
-            <header className="w-full fixed top-0 left-0 z-100 border-b border-gray-500/[.25] shadow-lg z-[1000]">
+            <header className="w-full fixed top-0 left-0 border-b border-gray-500/[.25] shadow-lg z-[1000]">
                 <div className="flex items-center flex-row justify-between mx-2">
                     <div className="my-2">
                         <Link href="/" >
@@ -38,7 +38,7 @@ export default function Header() {
                         </div>
 
                         {/* Reserve space for ThemeSwitcher */}
-                        <div className="w-10 h-10 flex items-center justify-center bg-white dark:bg-gray-800">
+                        <div className="w-10 h-10 flex items-center justify-center flex-none px-1">
                             <ThemeSwitcher />
                         </div>
                     </div>

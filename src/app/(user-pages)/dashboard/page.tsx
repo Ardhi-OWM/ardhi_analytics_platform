@@ -5,8 +5,8 @@ import React from "react";
 const Dashboard: React.FC = () => {
     return (
         <div className="mt-18 relative">
-            <div className="z-0 ">
-                <MapComponent  />
+            <div className="h-full overflow-hidden">
+                <MapComponent />
             </div>
         </div>
     );

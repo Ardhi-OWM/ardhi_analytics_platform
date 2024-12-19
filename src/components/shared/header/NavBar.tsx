@@ -66,7 +66,7 @@ export default function NavBar() {
             </div>
 
             {/* Mobile Navigation */}
-            <DisclosurePanel className="sm:hidden bg-white dark:bg-[hsl(279,100%,3.9%)] absolute top-16 left-0 h-screen w-full  shadow-lg ">
+            <DisclosurePanel className="sm:hidden bg-white dark:bg-[hsl(279,100%,3.9%)] absolute top-16 left-0 h-screen w-full shadow-lg ">
                 <div className="space-y-1 px-2 pb-3 pt-2">
                     {headerLinks.map((item) => (
                         <a

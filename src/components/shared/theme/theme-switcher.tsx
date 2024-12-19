@@ -29,9 +29,9 @@ const ThemeSwitcher = () => {
     const ICON_SIZE_SM = 16;
 
     return (
-        <DropdownMenu>
+        <DropdownMenu >
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size={"sm"} className="border-none  hover:bg-transparent">
+                <Button variant="ghost" size={"sm"} className="border-none  hover:bg-transparent ">
                     {(() => {
                         let IconComponent;
                         if (theme === "light") {
@@ -58,7 +58,7 @@ const ThemeSwitcher = () => {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-                className="w-content dark:bg-gray-800 bg-white shadow-lg z-[9999]"
+                className=" dark:bg-gray-800 bg-white shadow-lg z-[9999] mt-1 mr-2"
                 align="start">
                 <DropdownMenuRadioGroup
                     value={theme}
