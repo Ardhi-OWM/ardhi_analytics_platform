@@ -91,13 +91,11 @@ body {
 }
 
 /* Reduce Leaflet container z-index */
-.leaflet-container {
-  z-index: 0 !important;
-}
-
-/* Reduce Leaflet controls z-index */
-.leaflet-control {
-  z-index: 10 !important;
+.map-container {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 'calc(100vh - 100px)';
 }
 /*------------------------------- Footer & Header ------------------------------*/
 footer {

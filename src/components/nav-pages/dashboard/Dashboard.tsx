@@ -9,6 +9,7 @@ import axios from 'axios';
 import { mapLayers } from '@/components/constants';
 import SidebarItems from '@/components/nav-pages/dashboard/SidebarItems';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import ButtonMine from '@/components/reusable/button-mine';
 
 export default function MapComponent() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -18,6 +19,7 @@ export default function MapComponent() {
     const [activeLayer, setActiveLayer] = useState(
         mapLayers.find(layer => layer.default)?.url || mapLayers[0].url
     );
+
 
     type TileProvider = (x: number, y: number, z: number, dpr?: number) => string;
 
@@ -57,6 +59,7 @@ export default function MapComponent() {
         }
     };
 
+
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
             {/* Sidebar */}
@@ -79,64 +82,95 @@ export default function MapComponent() {
                 )}
             </div>
 
-            {/* Map Area */}
-            <div style={{ flex: 1 }}>
-                <div className="relative h-80vh">
-                    {/* Search Input */}
-                    <div className="absolute right-4 z-40 p-4 rounded-md  sm:z-20 ">
-                        <div className="flex items-center space-x-2">
-                            <input
-                                type="text"
-                                placeholder="Enter location or address"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                className="border border-gray-300 px-4 py-2 rounded-md w-full"
-                            />
+            {/* Main Content  Area */}
+            <div className='flex-1 flex flex-col'>
+                <div style={{ flex: 1, position: 'relative' }}>
+                    <div className="relative h-70vh ">
+                        {/* Search Input */}
+                        <div className="absolute right-4 z-40 p-4 rounded-md  sm:z-20 ">
+                            <div className="flex items-center space-x-2">
+                                <input
+                                    type="text"
+                                    placeholder="Enter location or address"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    className="border border-gray-300 px-4 py-2 rounded-md w-full"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Map Section */}
+                        <div className='map-container'>
+                            <Map
+                                boxClassname="relative"
+                                height={600}
+                                center={center}
+                                defaultZoom={13}
+                                provider={tileProvider}
+                            >
+                                <ZoomControl /> {/* Add zoom control */}
+                            </Map>
+                        </div>
+
+
+                        {/* Layer Selector */}
+                        <div className="absolute bottom-2 left-2 z-50">
+                            <DropdownMenu onOpenChange={(open) => setIsOpen(open)}>
+                                <DropdownMenuTrigger asChild>
+                                    <span className="flex items-center px-4 py-2 border border-gray-300 rounded-md cursor-pointer shadow-lg bg-background">
+                                        {mapLayers.find((layer) => layer.url === activeLayer)?.name || "Select Map Layer"}
+                                        <span className="ml-2">
+                                            {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                        </span>
+                                    </span>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    side="top"
+                                    align="start"
+                                    className="border border-gray-300 rounded-lg shadow-md"
+                                >
+                                    {mapLayers.map((layer) => (
+                                        <DropdownMenuItem
+                                            key={layer.url}
+                                            onClick={() => setActiveLayer(layer.url)}
+                                            className={`cursor-pointer ${activeLayer === layer.url ? "bg-blue-500 " : "hover:bg-gray-200"
+                                                }`}
+                                        >
+                                            {layer.name}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
+                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center justify-center border-t">
+                        {/* Button 1 */}
+                        <ButtonMine
+                            className="w-full mx-auto px-4 text-xs sm:text-sm leading-tight"
+                            href="https://www.ardhi.de"
+                            onClick={() => { }}
+                            white={false}
+                            px={4}
+                        >
+                            <span className="hover:text-green-600 hover:underline"> View Analytics </span>
+                        </ButtonMine>
 
-                    {/* Map */}
-                    <Map
-                        boxClassname="relative"
-                        height={500}
-                        center={center}
-                        defaultZoom={13}
-                        provider={tileProvider}
-                    >
-                        <ZoomControl />
-                    </Map>
-
-                    {/* Layer Selector */}
-                    <div className="absolute bottom-2 left-2 z-50">
-                        <DropdownMenu onOpenChange={(open) => setIsOpen(open)}>
-                            <DropdownMenuTrigger asChild>
-                                <span className="flex items-center px-4 py-2 border border-gray-300 rounded-md cursor-pointer shadow-lg bg-background">
-                                    {mapLayers.find((layer) => layer.url === activeLayer)?.name || "Select Map Layer"}
-                                    <span className="ml-2">
-                                        {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                    </span>
-                                </span>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                side="top"
-                                align="start"
-                                className="border border-gray-300 rounded-lg shadow-md"
-                            >
-                                {mapLayers.map((layer) => (
-                                    <DropdownMenuItem
-                                        key={layer.url}
-                                        onClick={() => setActiveLayer(layer.url)}
-                                        className={`cursor-pointer ${activeLayer === layer.url ? "bg-blue-500 " : "hover:bg-gray-200"
-                                            }`}
-                                    >
-                                        {layer.name}
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        {/* Button 2 */}
+                        <ButtonMine
+                            className="w-full mx-auto px-4 text-xs sm:text-sm leading-tight "
+                            href="https://www.ardhi.de"
+                            onClick={() => { }}
+                            white={false}
+                            px={4}
+                        >
+                            <span className="hover:text-green-600 hover:underline">Convert & Export View </span>
+                        </ButtonMine>
                     </div>
+
+
                 </div>
+
             </div>
         </div>
     );
