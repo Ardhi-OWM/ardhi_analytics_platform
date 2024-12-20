@@ -37,6 +37,20 @@ export const helpLinks = [
         label: "Feedback",
     },
 ];
+
+
+// GIS cloud services
+export const initialCloudServices = [
+    {
+        id: 1,
+        name: 'amazon-production',
+        provider: 'AWS',
+        type: 'cloud -production',
+        url: ' ',
+        region: 'us-east-1',
+        account: ' ',
+    },
+];
 // ------------------- Map Layers Links ------------------- //
 const MAPTILER_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPTILER_ACCESS_TOKEN;
 
@@ -63,10 +77,10 @@ export const mapLayers = [
         name: "Esri World Imagery",
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{x}/{y}",
     },
-    {
+    /* {
         name: "Stamen Watercolor",
         url: "https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg",
-    },
+    }, */
     {
         name: "Aquarelle",
         url: `https://api.maptiler.com/maps/aquarelle/256/{z}/{x}/{y}.png?key=${MAPTILER_ACCESS_TOKEN}`,
@@ -95,5 +109,5 @@ export const mapLayers = [
         name: "Winter -V2",
         url: `https://api.maptiler.com/maps/winter-v2/256/{z}/{x}/{y}.png?key=${MAPTILER_ACCESS_TOKEN}`,
     }
-    
+
 ];

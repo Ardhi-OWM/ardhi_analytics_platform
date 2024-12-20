@@ -101,10 +101,10 @@ export default function MapComponent() {
                         </div>
 
                         {/* Map Section */}
-                        <div className='map-container'>
+                        <div className='map-container h-3/4'>
                             <Map
-                                boxClassname="relative"
-                                height={600}
+                                boxClassname="relative h-full"
+                                height={700}
                                 center={center}
                                 defaultZoom={13}
                                 provider={tileProvider}
@@ -144,7 +144,7 @@ export default function MapComponent() {
                             </DropdownMenu>
                         </div>
                     </div>
-                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center justify-center border-t">
+                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center justify-center border-t w-1/2 mx-auto">
                         {/* Button 1 */}
                         <ButtonMine
                             className="w-full mx-auto px-4 text-xs sm:text-sm leading-tight"

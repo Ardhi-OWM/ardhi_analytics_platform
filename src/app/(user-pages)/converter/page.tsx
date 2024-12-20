@@ -2,9 +2,9 @@ import React from "react";
 
 const Converter: React.FC = () => {
     return (
-        <div>
-            <div>
-                <h1>Converter</h1>
+        <div className="mt-18 relative">
+            <div className='w-full '>
+                <h1> Hello World - Converter Page </h1>
             </div>
         </div>
     );
