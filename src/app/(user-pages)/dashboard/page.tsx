@@ -4,8 +4,8 @@ import React from "react";
 
 const Dashboard: React.FC = () => {
     return (
-        <div className="mt-18 relative">
-            <div className="h-full overflow-hidden">
+        <div className="mt-18 relative ">
+            <div className="h-full ">
                 <MapComponent />
             </div>
         </div>

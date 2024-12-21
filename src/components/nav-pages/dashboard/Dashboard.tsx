@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import { PanelLeftOpen, PanelRightOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import axios from 'axios';
+import { Divider } from "@nextui-org/divider";
 
 import { mapLayers } from '@/components/constants';
 import SidebarItems from '@/components/nav-pages/dashboard/SidebarItems';
@@ -95,7 +96,7 @@ export default function MapComponent() {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    className="border border-gray-300 px-4 py-2 rounded-md w-full"
+                                    className="border border-gray-300 px-4 py-2 rounded-md w-full ibm-plex-mono-regular-italic"
                                 />
                             </div>
                         </div>
@@ -144,7 +145,7 @@ export default function MapComponent() {
                             </DropdownMenu>
                         </div>
                     </div>
-                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center justify-center border-t w-1/2 mx-auto">
+                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center justify-center w-1/2 mx-auto">
                         {/* Button 1 */}
                         <ButtonMine
                             className="w-full mx-auto px-4 text-xs sm:text-sm leading-tight"
@@ -164,11 +165,11 @@ export default function MapComponent() {
                             white={false}
                             px={4}
                         >
-                            <span className="hover:text-green-600 hover:underline">Convert & Export View </span>
+                            <span className="hover:text-green-600 hover:underline sm:text-sm text-xs">
+                                Convert  View </span>
                         </ButtonMine>
                     </div>
-
-
+                    <Divider className="my-4 " />
                 </div>
 
             </div>

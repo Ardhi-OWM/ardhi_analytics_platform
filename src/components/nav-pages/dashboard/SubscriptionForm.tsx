@@ -64,7 +64,7 @@ const SubscriptionForm: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="block w-full px-3 py-2 border border-gray-400/[.25] rounded-md focus:ring focus:border-blue-500"
+                className="block w-full ibm-plex-mono-regular-italic px-3 py-2 border border-gray-400/[.25] rounded-md focus:ring focus:border-blue-500"
                 required
             />
             <button

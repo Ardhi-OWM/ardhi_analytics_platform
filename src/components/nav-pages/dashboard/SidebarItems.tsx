@@ -47,7 +47,7 @@ const SidebarItems: React.FC = () => {
                         placeholder={placeholder}
                         value={inputValue}
                         onChange={handleInputChange}
-                        className="border-gray-400/[.25] focus:ring focus:border-blue-500"
+                        className="border-gray-400/[.25] focus:ring focus:border-blue-500 ibm-plex-mono-regular-italic"
                         aria-label={label}
                     />
                 </div>
