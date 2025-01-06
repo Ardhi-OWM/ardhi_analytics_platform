@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Divider } from "@nextui-org/divider";
 
 import ConnectedApiEndpoints from "./connected";
-import DeletedApiEndpoints from "./deleted";
+import OverviewApiEndpoints from "./overview";
 
 // API Layout Component
 export default function ApiLayout() {
@@ -38,19 +38,19 @@ export default function ApiLayout() {
                         Connected
                     </button>
                     <button
-                        className={`px-4 py-2 text-sm ${activeTab === "deleted"
+                        className={`px-4 py-2 text-sm ${activeTab === "overview"
                                 ? "text-green-500 border-b-2 border-green-500"
                                 : "text-gray-400 border-b-2 border-transparent hover:border-gray-500"
                             }`}
-                        onClick={() => setActiveTab("deleted")}
+                        onClick={() => setActiveTab("overview")}
                     >
-                        Deleted API Endpoints
+                        Overview: API Endpoints
                     </button>
                 </div>
 
                 {/* Conditional Rendering of Content */}
                 {activeTab === "connected" && <ConnectedApiEndpoints />}
-                {activeTab === "deleted" && <DeletedApiEndpoints />}
+                {activeTab === "overview" && <OverviewApiEndpoints />}
             </div>
         </div>
     );

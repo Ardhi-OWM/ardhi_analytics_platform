@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap");
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -144,6 +145,32 @@ header::before {
   opacity: 0.2;
 }
 /* ----------------- FONT STYLE ----------------- */
+/* -- Source Code Pro-- */
+
+.source-code-pro-regular {
+  font-family: "Source Code Pro", serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+.source-code-pro-medium {
+  font-family: "Source Code Pro", serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+.source-code-pro-semibold {
+  font-family: "Source Code Pro", serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
+}
+.source-code-pro-bold {
+  font-family: "Source Code Pro", serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+}
 /* -- roboto-mono-- */
 .roboto-mono-thin {
   font-family: "Roboto Mono", monospace;

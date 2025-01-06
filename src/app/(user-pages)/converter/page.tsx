@@ -1,11 +1,10 @@
 import React from "react";
+import ConverterPage from "@/components/nav-pages/converter/ConverterPage";
 
 const Converter: React.FC = () => {
     return (
         <div className="mt-18 relative">
-            <div className='w-full '>
-                <h1> Hello World - Converter Page </h1>
-            </div>
+            <ConverterPage />
         </div>
     );
 };
