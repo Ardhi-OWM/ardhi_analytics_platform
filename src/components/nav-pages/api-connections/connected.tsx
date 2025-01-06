@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { useUser } from '@clerk/nextjs'; // Import Clerk hook
 
 import AddApi from './AddApi';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,6 +10,7 @@ import ButtonMine from "@/components/reusable/button-mine";
 
 interface Service {
     id?: number;
+    user_id: string;  // Added Clerk user ID
     name: string;
     provider: string;
     type: string;
@@ -18,20 +20,24 @@ interface Service {
 }
 
 const ConnectedApiEndpoints = () => {
+    const { user } = useUser(); // Fetching Clerk authenticated user
     const [services, setServices] = useState<Service[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    //const [loading, setLoading] = useState(false);
 
-    //  Fetch Data from Supabase
+
+    // Fetch Services for the Logged-in User Only
     const fetchData = async () => {
-        //setLoading(true);
-        const { data, error } = await supabase.from('services').select('*');
+        if (!user) return;
+        const { data, error } = await supabase
+            .from('services')
+            .select('*')
+            .eq('user_id', user.id);  // Fetch only the services of the logged-in user
+
         if (error) {
             console.error('Error fetching data:', error);
         } else {
             setServices(data);
         }
-        //setLoading(false);
     };
 
     useEffect(() => {
@@ -46,13 +52,43 @@ const ConnectedApiEndpoints = () => {
         return () => {
             subscription.unsubscribe();
         };
-    }, []);
+    }, [user]); // Fetch data when user changes
 
-    //  Delete Service from Supabase
+    // ---------- Add a New Service Linked to the User ----------
+    const addService = async (newService: Service) => {
+        if (!user) return;
+        try {
+            const { data, error } = await supabase
+                .from('services')
+                .insert([
+                    {
+                        ...newService,
+                        user_id: user.id  // Attach user_id when adding
+                    }
+                ]);
+            if (error) {
+                console.error('Supabase Error:', error.message || error);
+                throw new Error(error.message); // Throw error with message
+            }
+
+            alert('Service added successfully!');
+            fetchData();
+        } catch (error) {
+            console.error('Error adding service:', error instanceof Error ? error.message : error);
+        }
+    };
+
+    // ------------- Delete Service from Supabase (User-Specific) -----------
     const deleteService = async (id: number) => {
         if (!confirm("Are you sure you want to delete this service?")) return;
+        if (!user) return;
+
         try {
-            const { error } = await supabase.from('services').delete().match({ id });
+            const { error } = await supabase
+                .from('services')
+                .delete()
+                .match({ id, user_id: user.id }); // Ensure only the user's service is deleted
+
             if (error) {
                 console.error('Error deleting data:', error.message);
             } else {
@@ -63,6 +99,9 @@ const ConnectedApiEndpoints = () => {
             console.error('Unexpected error:', error);
         }
     };
+
+    // ------------- Date formatting  -----------
+
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
@@ -90,9 +129,10 @@ const ConnectedApiEndpoints = () => {
             {isModalOpen && (
                 <AddApi
                     onClose={() => setIsModalOpen(false)}
-                    onServiceAdded={(service) => setServices((prev) => [...prev, service])}
+                    onServiceAdded={(service) => addService({ ...service, user_id: user?.id || '' })}
                 />
             )}
+
 
             {/* ----------------- Services Table -----------------*/}
             <Table>
