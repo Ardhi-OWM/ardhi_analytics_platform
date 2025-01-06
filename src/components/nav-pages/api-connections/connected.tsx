@@ -20,18 +20,18 @@ interface Service {
 const ConnectedApiEndpoints = () => {
     const [services, setServices] = useState<Service[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
+    //const [loading, setLoading] = useState(false);
 
     //  Fetch Data from Supabase
     const fetchData = async () => {
-        setLoading(true);
+        //setLoading(true);
         const { data, error } = await supabase.from('services').select('*');
         if (error) {
             console.error('Error fetching data:', error);
         } else {
             setServices(data);
         }
-        setLoading(false);
+        //setLoading(false);
     };
 
     useEffect(() => {
@@ -78,9 +78,7 @@ const ConnectedApiEndpoints = () => {
                 <ButtonMine
                     href={undefined}
                     className="w-full mx-auto px-4 text-xs sm:text-sm leading-tight"
-                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                        setIsModalOpen(true); // Show Add API Endpoint popup
-                    }}
+                    onClick={() => setIsModalOpen(true)}
                     white={false}
                     px={4}
                 >
