@@ -7,7 +7,6 @@ import AddApi from './AddApi';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import ButtonMine from "@/components/reusable/button-mine";
 
-
 interface Service {
     id?: number;
     user_id: string;  // Added Clerk user ID
@@ -24,23 +23,22 @@ const ConnectedApiEndpoints = () => {
     const [services, setServices] = useState<Service[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-
-    // Fetch Services for the Logged-in User Only
-    const fetchData = async () => {
-        if (!user) return;
-        const { data, error } = await supabase
-            .from('services')
-            .select('*')
-            .eq('user_id', user.id);  // Fetch only the services of the logged-in user
-
-        if (error) {
-            console.error('Error fetching data:', error);
-        } else {
-            setServices(data);
-        }
-    };
-
     useEffect(() => {
+        // Fetch Services for the Logged-in User Only
+        const fetchData = async () => {
+            if (!user) return;
+            const { data, error } = await supabase
+                .from('services')
+                .select('*')
+                .eq('user_id', user.id);  // Fetch only the services of the logged-in user
+
+            if (error) {
+                console.error('Error fetching data:', error);
+            } else {
+                setServices(data);
+            }
+        };
+
         fetchData();
 
         // Real-Time Sync Setup (No Auth)
@@ -52,13 +50,13 @@ const ConnectedApiEndpoints = () => {
         return () => {
             subscription.unsubscribe();
         };
-    }, [user]); // Fetch data when user changes
+    }, [user]); // Only `user` is needed in the dependency array
 
     // ---------- Add a New Service Linked to the User ----------
     const addService = async (newService: Service) => {
         if (!user) return;
         try {
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('services')
                 .insert([
                     {
@@ -72,7 +70,7 @@ const ConnectedApiEndpoints = () => {
             }
 
             alert('Service added successfully!');
-            fetchData();
+            setServices((prevServices) => [...prevServices, newService]); // Update state directly
         } catch (error) {
             console.error('Error adding service:', error instanceof Error ? error.message : error);
         }
@@ -93,7 +91,7 @@ const ConnectedApiEndpoints = () => {
                 console.error('Error deleting data:', error.message);
             } else {
                 alert('Service deleted successfully!');
-                fetchData();
+                setServices((prevServices) => prevServices.filter((service) => service.id !== id)); // Update state directly
             }
         } catch (error) {
             console.error('Unexpected error:', error);
@@ -101,12 +99,11 @@ const ConnectedApiEndpoints = () => {
     };
 
     // ------------- Date formatting  -----------
-
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
         return date.toLocaleDateString('ko-KR') + ' ' + date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
-    }
+    };
 
     return (
         <div>
@@ -132,7 +129,6 @@ const ConnectedApiEndpoints = () => {
                     onServiceAdded={(service) => addService({ ...service, user_id: user?.id || '' })}
                 />
             )}
-
 
             {/* ----------------- Services Table -----------------*/}
             <Table>
@@ -171,7 +167,6 @@ const ConnectedApiEndpoints = () => {
                             </TableCell>
                         </TableRow>
                     ))}
-
                 </TableBody>
             </Table>
         </div>
