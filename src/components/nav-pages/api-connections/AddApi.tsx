@@ -12,7 +12,10 @@ interface Service {
     created_at?: string;
 }
 
-const AddApi = ({ onClose, onServiceAdded }: { onClose: () => void; onServiceAdded: (service: Service) => void }) => {
+const AddApi = ({ onClose, onServiceAdded }: {
+    onClose: () => void;
+    onServiceAdded: (service: Service) => void
+}) => {
     const [apiUrl, setApiUrl] = useState('');
     const [newService, setNewService] = useState<Service>({
         name: '',
