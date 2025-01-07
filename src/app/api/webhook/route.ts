@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { Webhook } from 'svix';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -14,70 +14,65 @@ interface ClerkEvent {
   };
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
-    const payload = JSON.stringify(req.body);
-    const headers = req.headers;
+export async function POST(req: NextRequest) {
+  try {
+    const payload = await req.text();
+    const headers = Object.fromEntries(req.headers.entries());
 
     // Verify the webhook signature
     const wh = new Webhook(webhookSecret);
-    try {
-      const event = wh.verify(payload, headers as Record<string, string>) as ClerkEvent;
+    const event = wh.verify(payload, headers) as ClerkEvent;
 
-      // Handle Clerk events
-      switch (event.type) {
-        case 'user.created':
-        case 'user.updated':
-          const { id, email_addresses, first_name, last_name } = event.data;
-          const email = email_addresses[0].email_address;
+    // Handle Clerk events
+    switch (event.type) {
+      case 'user.created':
+      case 'user.updated': {
+        const { id, email_addresses, first_name, last_name } = event.data;
+        const email = email_addresses[0]?.email_address;
 
-          // Upsert user into Supabase
-          const { data, error } = await supabase
-            .from('users')
-            .upsert(
-              {
-                clerk_user_id: id,
-                email,
-                first_name,
-                last_name,
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: 'clerk_user_id' }
-            )
-            .select();
+        const { data, error } = await supabase
+          .from('users')
+          .upsert(
+            {
+              clerk_user_id: id,
+              email,
+              first_name,
+              last_name,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'clerk_user_id' }
+          )
+          .select();
 
-          if (error) {
-            console.error('Error syncing user to Supabase:', error);
-            return res.status(500).json({ error: 'Failed to sync user' });
-          }
+        if (error) {
+          console.error('Error syncing user to Supabase:', error);
+          return NextResponse.json({ error: 'Failed to sync user' }, { status: 500 });
+        }
 
-          return res.status(200).json({ success: true, data });
-
-        case 'user.deleted':
-          const { id: deletedUserId } = event.data;
-
-          // Delete user from Supabase
-          const { error: deleteError } = await supabase
-            .from('users')
-            .delete()
-            .eq('clerk_user_id', deletedUserId);
-
-          if (deleteError) {
-            console.error('Error deleting user from Supabase:', deleteError);
-            return res.status(500).json({ error: 'Failed to delete user' });
-          }
-
-          return res.status(200).json({ success: true });
-
-        default:
-          return res.status(200).json({ message: 'Unhandled event type' });
+        return NextResponse.json({ success: true, data });
       }
-    } catch (err) {
-      console.error('Webhook verification failed:', err);
-      return res.status(400).json({ error: 'Invalid webhook signature' });
+
+      case 'user.deleted': {
+        const { id: deletedUserId } = event.data;
+
+        const { error: deleteError } = await supabase
+          .from('users')
+          .delete()
+          .eq('clerk_user_id', deletedUserId);
+
+        if (deleteError) {
+          console.error('Error deleting user from Supabase:', deleteError);
+          return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true });
+      }
+
+      default:
+        return NextResponse.json({ message: 'Unhandled event type' });
     }
-  } else {
-    res.setHeader('Allow', ['POST']);
-    res.status(405).end('Method Not Allowed');
+  } catch (err) {
+    console.error('Webhook verification failed:', err);
+    return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 });
   }
 }
