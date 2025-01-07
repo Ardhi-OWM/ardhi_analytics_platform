@@ -65,19 +65,19 @@ const ConnectedApiEndpoints = () => {
                         user_id: user.id
                     }
                 ]);
-    
+
             if (error) {
                 console.error('Supabase Error:', error.message || error);
                 throw new Error(error.message);
             }
-    
+
             alert('Service added successfully!');
-            setServices((prevServices) => [...prevServices, newService]); 
+            setServices((prevServices) => [...prevServices, newService]);
         } catch (error) {
             console.error('Error adding service:', error instanceof Error ? error.message : error);
         }
     };
-    
+
 
     // ------------- Delete Service from Supabase (User-Specific) -----------
     const deleteService = async (id: number) => {
