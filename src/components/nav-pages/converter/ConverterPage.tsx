@@ -18,7 +18,7 @@ export default function ConverterPage() {
                     Select a file to Convert to a different format
                 </h3>
                 <p>
-                    We support many different file formats. Choose the format that best matches the way you'll use the data.
+                    We support many different file formats. Choose the format that best matches the way you will use the data.
                 </p>
             </div>
         </div>
