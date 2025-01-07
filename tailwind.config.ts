@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
 
-	
+
 
 export default {
 	darkMode: ["class"],
@@ -16,17 +16,8 @@ export default {
 				18: '4.5rem', // Add custom spacing (18 -> 4.5rem)
 			},
 			colors: {
-				background: {
-					DEFAULT: 'hsl(var(--background))',
-					dark: 'hsl(279, 100%, 5%)' // Dark purple explicitly defined
-				},
-				foreground: 'hsl(var(--foreground))',
 
-				card: {
-					DEFAULT: 'hsl(var(--card))',
-					foreground: 'hsl(var(--card-foreground))'
-				}
-				/* background: 'hsl(var(--background))',
+				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				card: {
 					DEFAULT: 'hsl(var(--card))',
@@ -65,7 +56,7 @@ export default {
 					'3': 'hsl(var(--chart-3))',
 					'4': 'hsl(var(--chart-4))',
 					'5': 'hsl(var(--chart-5))'
-				} */
+				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

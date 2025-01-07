@@ -1,14 +1,7 @@
 "use client";
 import * as React from "react";
 import { CloudUpload, X, RefreshCw } from 'lucide-react';
-
-interface FileType {
-    name: string;
-    size: number;
-    progress: number;
-    error?: boolean;
-    uploaded: boolean;
-}
+import { FileType } from './types'; // Import from the shared types file
 
 interface FileUploadProps {
     onFileSelect: (file: FileType) => void;
@@ -53,7 +46,6 @@ export default function FileUpload({ onFileSelect }: FileUploadProps) {
         }, 500);
     };
 
-
     const triggerFileUpload = () => fileInputRef.current?.click();
     const resetUpload = () => setSelectedFile(null);
 
@@ -66,22 +58,20 @@ export default function FileUpload({ onFileSelect }: FileUploadProps) {
 
     return (
         <div className="flex justify-center items-center flex-col">
-            
-                <div
-                    className="flex flex-col justify-center items-center border border-dashed border-purple-300 rounded h-48 w-96 cursor-pointer"
-                    onClick={triggerFileUpload}
-                >
-                    <CloudUpload className="h-24 w-24 text-purple-500" />
-                    <p className="text-purple-500 ibm-plex-mono-semibold-italic">Import your file</p>
-                    <p className="text-gray-500">Click or drag and drop a file here</p>
-                </div>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    onChange={handleFileUpload}
-                />
-           
+            <div
+                className="flex flex-col justify-center items-center border border-dashed border-purple-300 rounded h-48 w-96 cursor-pointer"
+                onClick={triggerFileUpload}
+            >
+                <CloudUpload className="h-24 w-24 text-purple-500" />
+                <p className="text-purple-500 ibm-plex-mono-semibold-italic">Import your file</p>
+                <p className="text-gray-500">Click or drag and drop a file here</p>
+            </div>
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileUpload}
+            />
 
             {selectedFile && (
                 <div className="mt-6 w-96 border p-4 rounded-lg shadow-md ">

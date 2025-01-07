@@ -64,7 +64,7 @@ export default function MapComponent() {
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
             {/* Sidebar */}
-            <div className={`${sidebarOpen ? 'w-64' : 'w-12'} shadow-md transition-all duration-300 flex flex-col z-50 border-r border-gray-200/[0.25]`}>
+            <div className={`${sidebarOpen ? 'w-64' : 'w-12'}  transition-all duration-300 flex flex-col z-50 border-r border-gray-200/[0.25]`}>
                 <IconButton
                     onClick={() => setSidebarOpen(!sidebarOpen)}
                     className="self-end m-2"

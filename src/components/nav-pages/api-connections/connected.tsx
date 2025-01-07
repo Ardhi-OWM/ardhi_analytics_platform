@@ -109,7 +109,7 @@ const ConnectedApiEndpoints = () => {
     };
 
     return (
-        <div>
+        <div className="w-full flex flex-col min-h-screen">
             <h1 className="text-2xl ubuntu-mono-bold mb-4">Connected API Endpoints</h1>
 
             {/* Button to Open Modal */}
