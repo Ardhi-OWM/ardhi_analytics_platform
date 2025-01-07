@@ -42,6 +42,7 @@
     "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1",
     "react-remove-scroll": "^2.6.1",
+    "svix": "^1.45.1",
     "swr": "^2.2.5",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7"
