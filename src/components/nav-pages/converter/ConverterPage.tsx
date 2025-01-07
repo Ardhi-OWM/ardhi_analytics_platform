@@ -1,10 +1,7 @@
 "use client";
 import * as React from "react";
 import { Divider } from "@nextui-org/divider";
-import {
-    Select, SelectContent, SelectGroup, SelectItem,
-    SelectLabel, SelectTrigger, SelectValue
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fileFormats } from '@/components/constants';
 import FileUpload from './FileUpload';
 
@@ -12,7 +9,6 @@ export default function ConverterPage() {
     const handleFileSelect = (file: any) => {
         console.log("File received in parent:", file);
     };
-
     return (
         <div className='w-full'>
             {/* Header Section */}
@@ -53,6 +49,9 @@ export default function ConverterPage() {
                                     {format.label}
                                 </SelectItem>
                             ))}
+                            <SelectItem value="request-new-format">
+                                Request a new format
+                            </SelectItem>
                         </SelectGroup>
                     </SelectContent>
                 </Select>
