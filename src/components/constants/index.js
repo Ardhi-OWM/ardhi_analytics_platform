@@ -21,6 +21,15 @@ export const headerLinks = [
         current: false
     },
 ];
+// ------------------- FileFormats Links ------------------- //
+
+export const fileFormats = [
+    { value: "geojson", label: "GeoJSON" },
+    { value: "csv", label: "CSV" },
+    { value: "html", label: "HTML(Leaflet)" },
+    { value: "shp", label: "Shapefile" },
+    { value: "kml", label: "KML" }
+];
 
 // ------------------- Dashboard Links ------------------- //
 export const helpLinks = [

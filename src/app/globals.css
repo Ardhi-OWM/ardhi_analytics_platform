@@ -83,13 +83,21 @@ body {
 }
 
 @layer base {
-  * {
-    @apply border-border;
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
   }
+  
+  .dark {
+    --background: 279 100% 5%;  /* Ensure this value is correctly set */
+    --foreground: 0 0% 98%;
+  }
+
   body {
     @apply bg-background text-foreground;
   }
 }
+
 
 /* Reduce Leaflet container z-index */
 .map-container {
