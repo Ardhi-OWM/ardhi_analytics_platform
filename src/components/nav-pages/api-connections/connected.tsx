@@ -146,13 +146,6 @@ const ConnectedApiEndpoints = () => {
                 </ButtonMine>
             </div>
 
-            {/* --------- Show AddApi Modal When Opened-------- */}
-            {/*  {isModalOpen && (
-                <AddApi
-                    onClose={() => setIsModalOpen(false)}
-                    onServiceAdded={(service) => addService({ ...service, user_id: user?.id || '' })}
-                />
-            )} */}
 
             {isModalOpen && (
                 <AddApi

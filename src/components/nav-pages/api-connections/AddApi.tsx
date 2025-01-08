@@ -44,8 +44,9 @@ const AddApi = ({ onClose, onServiceAdded }: {
                 hostname.includes('amazonaws') ? 'AWS' :
                     hostname.includes('core.windows') ? 'Azure' :
                         hostname.includes('cloud-object-storage') ? 'IBM Cloud' :
-                            hostname.includes('digitaloceanspaces') ? 'DigitalOcean' :
-                                'Unknown';
+                            hostname.includes('googleapis') ? 'Google Cloud' :
+                                hostname.includes('digitaloceanspaces') ? 'DigitalOcean' :
+                                    'Unknown';
 
             // Extract the region
             const parts = hostname.split('.');
@@ -60,7 +61,6 @@ const AddApi = ({ onClose, onServiceAdded }: {
                 provider,
                 region,
                 name, // Set the extracted name
-                type: 'Cloud Storage'
             });
         } catch (error) {
             console.error('Invalid URL format', error);
@@ -120,7 +120,7 @@ const AddApi = ({ onClose, onServiceAdded }: {
                     onChange={(e) => setApiUrl(e.target.value)}
                     onBlur={() => parseApiUrl(apiUrl)}
                     required
-                    className="w-full ibm-plex-mono-regular-italic border border-gray-300 rounded p-2 mb-4 text-sm"
+                    className="w-full ibm-plex-mono-regular-italic border border-purple-300 rounded p-2 mb-4 text-sm"
                 />
                 <div className="flex justify-end gap-4">
                     <button
