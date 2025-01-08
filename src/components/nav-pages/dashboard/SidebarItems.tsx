@@ -41,8 +41,8 @@ const SidebarItems: React.FC = () => {
                 <select
                     id="input-type"
                     aria-label="Input type selector"
-                    className="block w-full px-2 border border-gray-400/[.25] 
-                    rounded bg-background focus:ring focus:border-green-500 text-sm"
+                    className="block w-full px-2 border border-purple-400/[.25] 
+                    rounded bg-background focus:border-purple-500 text-sm"
                     value={inputType}
                     onChange={handleTypeChange}
                 >
@@ -61,7 +61,7 @@ const SidebarItems: React.FC = () => {
                         placeholder={placeholder}
                         value={inputValue}
                         onChange={handleInputChange}
-                        className="border-gray-400/[.25] ibm-plex-mono-regular-italic"
+                        className="border-purple-400/[.25] ibm-plex-mono-regular-italic"
                         aria-label={label}
                     />
                 </div>
@@ -77,7 +77,7 @@ const SidebarItems: React.FC = () => {
                     placeholder="Enter Link to Data"
                     value={inputValue}
                     onChange={handleInputChange}
-                    className="border-gray-400/[.25] focus:ring focus:border-green-500 ibm-plex-mono-regular-italic"
+                    className="border-purple-400/[.25] g focus:border-purple-500 ibm-plex-mono-regular-italic"
                     aria-label="Data Link"
                 />
 

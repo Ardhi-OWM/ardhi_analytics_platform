@@ -22,61 +22,82 @@ const ConnectedApiEndpoints = () => {
     const { user } = useUser(); // Fetching Clerk authenticated user
     const [services, setServices] = useState<Service[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        // Fetch Services for the Logged-in User Only
+        if (!user) return;
+
         const fetchData = async () => {
-            if (!user) return;
             const { data, error } = await supabase
                 .from('services')
                 .select('*')
-                .eq('user_id', user.id);  // Fetch only the services of the logged-in user
+                .eq('user_id', user.id);
 
             if (error) {
                 console.error('Error fetching data:', error);
             } else {
-                setServices(data);
+                setServices(data);  //  Clear state and set fresh data
             }
         };
 
         fetchData();
 
-        // Real-Time Sync Setup (No Auth)
+        //  Real-time subscription fixed to avoid overwriting or duplication
         const subscription = supabase
             .channel('services_updates')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, fetchData)
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'services' }, (payload) => {
+                setServices((prev) => {
+                    const ids = new Set(prev.map(service => service.id));
+                    if (!ids.has((payload.new as Service).id)) {
+                        return [...prev, payload.new as Service];
+                    }
+                    return prev;
+                });
+            })
             .subscribe();
 
         return () => {
-            subscription.unsubscribe();
+            supabase.removeChannel(subscription);
         };
-    }, [user]); // Only `user` is needed in the dependency array
+    }, [user]);
+
+
 
     // ---------- Add a New Service Linked to the User ----------
+
     const addService = async (newService: Service) => {
-        if (!user) return;
+        if (!user || isSubmitting) return;
+        setIsSubmitting(true);  // Prevent double clicks during submission
+
         try {
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('services')
-                .insert([
-                    {
-                        ...newService,
-                        id: undefined,  // Prevent passing the id field to avoid conflict
-                        user_id: user.id
-                    }
-                ]);
+                .insert([{
+                    user_id: user.id,
+                    name: newService.name,
+                    provider: newService.provider,
+                    type: newService.type,
+                    region: newService.region,
+                    apiUrl: newService.apiUrl
+                }])
+                .select();  // Fetch the inserted data directly
 
             if (error) {
                 console.error('Supabase Error:', error.message || error);
                 throw new Error(error.message);
             }
 
-            alert('Service added successfully!');
-            setServices((prevServices) => [...prevServices, newService]);
+            if (data) {
+                alert('Service added successfully!');
+                setServices((prev) => [...prev, ...data]);
+            }
         } catch (error) {
             console.error('Error adding service:', error instanceof Error ? error.message : error);
+        } finally {
+            setIsSubmitting(false);  // Reset the state after submission
         }
     };
+
 
 
     // ------------- Delete Service from Supabase (User-Specific) -----------
@@ -109,7 +130,7 @@ const ConnectedApiEndpoints = () => {
     };
 
     return (
-        <div className="w-full flex flex-col min-h-screen">
+        <div className="w-full flex flex-col ">
             <h1 className="text-2xl ubuntu-mono-bold mb-4">Connected API Endpoints</h1>
 
             {/* Button to Open Modal */}
@@ -126,12 +147,23 @@ const ConnectedApiEndpoints = () => {
             </div>
 
             {/* --------- Show AddApi Modal When Opened-------- */}
-            {isModalOpen && (
+            {/*  {isModalOpen && (
                 <AddApi
                     onClose={() => setIsModalOpen(false)}
                     onServiceAdded={(service) => addService({ ...service, user_id: user?.id || '' })}
                 />
+            )} */}
+
+            {isModalOpen && (
+                <AddApi
+                    onClose={() => setIsModalOpen(false)}
+                    onServiceAdded={(service) => addService({
+                        ...service,
+                        user_id: user?.id || ''  // Ensuring the correct user is passed here
+                    })}
+                />
             )}
+
 
             {/* ----------------- Services Table -----------------*/}
             <Table>

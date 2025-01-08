@@ -96,7 +96,7 @@ export default function MapComponent() {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    className="border border-gray-300 px-4 py-2 rounded-md w-full ibm-plex-mono-regular-italic"
+                                    className="border border-purple-300 px-4 py-2 rounded-md w-full ibm-plex-mono-regular-italic"
                                 />
                             </div>
                         </div>
@@ -119,7 +119,7 @@ export default function MapComponent() {
                         <div className="absolute bottom-2 left-2 z-50">
                             <DropdownMenu onOpenChange={(open) => setIsOpen(open)}>
                                 <DropdownMenuTrigger asChild>
-                                    <span className="flex items-center px-4 py-2 border border-gray-300 rounded-md cursor-pointer shadow-lg bg-background">
+                                    <span className="flex items-center px-4 py-2 border border-purple-300 rounded-md cursor-pointer shadow-lg bg-background">
                                         {mapLayers.find((layer) => layer.url === activeLayer)?.name || "Select Map Layer"}
                                         <span className="ml-2">
                                             {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
