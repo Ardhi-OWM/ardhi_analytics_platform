@@ -100,7 +100,7 @@ export const addService = async (
 // -------- Handle submit from Sidebar -----------
 export const handleSubmit = async (
     inputValue: string,
-    user: any,
+    user: { id: string } | null,
     setIsSubmitting: React.Dispatch<SetStateAction<boolean>>
 ) => {
     if (!user) {
