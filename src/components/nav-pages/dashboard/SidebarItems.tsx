@@ -30,7 +30,6 @@ const SidebarItems: React.FC = () => {
             {
                 name,
                 provider,
-                type: inputType,
                 region,
                 apiUrl,
                 user_id: user.id  // Added user_id to the object

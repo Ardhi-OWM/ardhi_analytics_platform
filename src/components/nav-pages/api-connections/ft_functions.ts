@@ -8,7 +8,6 @@ interface Service {
     user_id: string;
     name: string;
     provider: string;
-    type: string;
     region: string;
     apiUrl: string;
     created_at?: string;
@@ -115,7 +114,6 @@ export const handleSubmit = async (
         {
             name,
             provider,
-            type: inputType,
             region,
             apiUrl,
             user_id: user.id  // Added user_id to the object
