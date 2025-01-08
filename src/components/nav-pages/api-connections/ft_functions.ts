@@ -100,7 +100,6 @@ export const addService = async (
 // -------- Handle submit from Sidebar -----------
 export const handleSubmit = async (
     inputValue: string,
-    inputType: "api" | "ml-model" | "dataset",
     user: any,
     setIsSubmitting: React.Dispatch<SetStateAction<boolean>>
 ) => {
