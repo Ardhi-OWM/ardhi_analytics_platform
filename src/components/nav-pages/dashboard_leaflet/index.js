@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { PanelLeftOpen, PanelRightOpen } from "lucide-react";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
@@ -14,6 +14,21 @@ import { mapLayers } from "@/components/constants";
 
 export default function DashboardMap() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
+
+    const mapRef = useRef(null);
+    const [isMapInitialized, setIsMapInitialized] = useState(false);
+
+    useEffect(() => {
+        // Prevent multiple map initializations
+        if (!isMapInitialized) {
+            setIsMapInitialized(true);
+        }
+
+        return () => {
+            // Cleanup when the component is unmounted to prevent memory leaks
+            mapRef.current = null;
+        };
+    }, [isMapInitialized]);
 
     return (
         <div className="flex flex-row h-screen">
@@ -35,22 +50,20 @@ export default function DashboardMap() {
 
             {/* Map Area (always mounted) */}
             <div className="flex-grow">
-                <div className="h-full">
-                    {/* Render MapArea exactly once */}
-                    <MapContainer
-                        center={[51.505, -0.09]}
-                        zoom={13}
-                        scrollWheelZoom={false}
-                        style={{ width: "100%", height: "100%" }} // fill the container
-                    >
-                        {mapLayers.map((layer) => (
-                            <TileLayer
-                                key={layer.url}
-                                url={layer.url}
-                                //default={layer.default}
-                            />
-                        ))}
-                    </MapContainer>
+                <div style={{ height: "100vh", width: "100%" }}>
+                    {isMapInitialized && (
+                        <MapContainer
+                            center={[51.505, -0.09]}
+                            zoom={13}
+                            scrollWheelZoom={false}
+                            style={{ width: "100%", height: "100%" }}
+                            ref={mapRef}
+                        >
+                            {mapLayers.map((layer) => (
+                                <TileLayer key={layer.url} url={layer.url} attribution={layer.attribution} />
+                            ))}
+                        </MapContainer>
+                    )}
                 </div>
             </div>
         </div>
