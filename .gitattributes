@@ -1,0 +1,14 @@
+# Use LF for all text files
+* text=auto
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+
+# Use CRLF for Windows-specific files if necessary
+*.bat text eol=crlf
+*.cmd text eol=crlf

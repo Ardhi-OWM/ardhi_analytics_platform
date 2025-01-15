@@ -7,12 +7,35 @@ import Box from "@mui/material/Box";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 
-
-import { MapContainer, TileLayer } from "react-leaflet";
+import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
+import 'leaflet-geosearch/dist/geosearch.css';
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css"; // Important: import Leaflet styles
 import { mapLayers } from "@/components/constants";
 import SidebarItems from "@/components/nav-pages/dashboard/SidebarItems";
 
+{/* -- Custom component to handle adding the GeoSearchControl ---*/ }
+const SearchControl = () => {
+    const map = useMap();  // Use the map instance from React Leaflet
+    useEffect(() => {
+
+        const provider = new OpenStreetMapProvider();
+        const searchControl = new GeoSearchControl({
+            provider,
+            style: 'bar',
+            position: 'topright',
+            searchLabel: 'Enter address...',
+        });
+
+        map.addControl(searchControl);
+
+        return () => {
+            map.removeControl(searchControl); // Cleanup on unmount
+        };
+    }, [map]);
+
+    return null;
+};
 
 export default function DashboardMap() {
 
@@ -26,6 +49,7 @@ export default function DashboardMap() {
     const [activeLayer, setActiveLayer] = useState(
         mapLayers.find(layer => layer.default)?.url || mapLayers[0].url
     );
+    ;
 
     useEffect(() => {
         // Prevent multiple map initializations
@@ -71,14 +95,15 @@ export default function DashboardMap() {
                                 ref={mapRef}
                             >
                                 {/* Render only the active layer dynamically */}
+                                <SearchControl  /> {/* Added the search control */}
                                 <TileLayer key={activeLayer} url={activeLayer} />
                             </MapContainer>
                         )}
                     </div>
                 </div>
-                {/* Layer Selector */}
+                {/* --------------- Layer Selector AND dropdown------------- */}
                 <div className="absolute bottom-2 left-2 z-50"
-                style={{ zIndex: 1000 }} // Increase z-index explicitly
+                    style={{ zIndex: 1000 }} // Increase z-index explicitly
                 >
                     <DropdownMenu onOpenChange={(open) => setIsOpen(open)}>
                         <DropdownMenuTrigger asChild>
