@@ -6,6 +6,7 @@ const isProtectedRoute = createRouteMatcher([
     "/dashboard/:path*",   // Matches /dashboard
     '/converter',           // Matches /converter
     '/api-connections',     // Matches /api-connections
+    '/maptry',     // Matches /api-connections
     '/',
 ]);
 

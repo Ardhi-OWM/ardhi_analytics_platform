@@ -20,6 +20,12 @@ export const headerLinks = [
         href: "/converter",
         current: false
     },
+    {
+        id: "4",
+        name: "Dashboard Leaflet",
+        href: "/dashboard-leaflet",
+        current: false // This is the current page
+    },
 ];
 // ------------------- FileFormats Links ------------------- //
 
