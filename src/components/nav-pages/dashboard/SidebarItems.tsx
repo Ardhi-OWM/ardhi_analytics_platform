@@ -1,10 +1,10 @@
 "use client";
 // Precoded components
 import { useState } from "react";
-import { Link, MousePointerClick } from 'lucide-react';
-import { useUser } from '@clerk/nextjs';
+import { Link, MousePointerClick } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 
-// In directory components 
+// In directory components
 import { Input } from "@/components/ui/input";
 import SubscriptionForm from "./SubscriptionForm";
 import { handleDataChange, inputData } from "./db_functions";
@@ -17,44 +17,79 @@ const SidebarItems: React.FC = () => {
     const [dataUrl, setDataUrl] = useState("");
     const { user } = useUser();
 
-    const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => setInputType(e.target.value as "api" | "ml-model" | "dataset");
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setInputValue(e.target.value);
+    // Handle input type change
+    const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
+        setInputType(e.target.value as "api" | "ml-model" | "dataset");
 
+    // Handle input value change
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+        setInputValue(e.target.value);
+
+    // Handle form submission
     const handleSubmit = async () => {
-
-        if (!user) return alert("You need to be logged in to add a service");
-
-        const { name, provider, region, apiUrl } = parseApiUrl(inputValue);
-
-        await addService(
-            {
-                name,
-                provider,
-                region,
-                apiUrl,
-                user_id: user.id  // Added user_id to the object
-            },
-            user.id,
-            () => { },
-            setIsSubmitting
-        );
-        alert("Service added successfully!");
+        if (!user) {
+            alert("You need to be logged in to add a service");
+            return;
+        }
+    
+        // Capitalize input_type to match database constraint
+        const formattedInputType =
+            inputType === "api"
+                ? "API"
+                : inputType === "ml-model"
+                ? "Link to Model"
+                : "Link to Dataset";
+    
+        const payload = {
+            user_id: user.id,
+            input_type: formattedInputType,
+            data_link: inputValue,
+        };
+    
+        console.log("Submitting payload:", payload);
+    
+        try {
+            const response = await fetch("/api/add-input", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+    
+            const result = await response.json();
+    
+            if (!response.ok) {
+                console.log("API Error:", result.error);
+                alert(`Failed to add service: ${result.error}`);
+                return;
+            }
+    
+            alert("Service added successfully!");
+            setInputValue(""); // Clear input field
+        } catch (err) {
+            console.error("Unexpected error:", err);
+            alert("An unexpected error occurred. Please try again.");
+        }
     };
+    
+    
 
+    // Generate dynamic labels and placeholders based on input type
     const getLabelAndPlaceholder = (type: string) => {
         if (type === "api")
             return {
                 label: "Enter API",
-                placeholder: "API Endpoint"
+                placeholder: "API Endpoint",
             };
         if (type === "ml-model")
             return {
                 label: "Enter Link to the Model",
-                placeholder: "Model URL"
+                placeholder: "Model URL",
             };
         return {
             label: "Enter Link to Dataset",
-            placeholder: "Dataset URL"
+            placeholder: "Dataset URL",
         };
     };
 
@@ -62,16 +97,16 @@ const SidebarItems: React.FC = () => {
 
     return (
         <div className="flex flex-col space-y-8 mx-2">
-            <div className="space-y-4 s">
-                <label htmlFor="input-type" className=" text-sm font-medium flex flex-row space-x-2">
+            {/* Input type selection */}
+            <div className="space-y-4">
+                <label htmlFor="input-type" className="text-sm font-medium flex flex-row space-x-2">
                     <MousePointerClick className="text-green-300 ml-2 rotate-90" />
-                    <p >Select Input Type</p>
+                    <p>Select Input Type</p>
                 </label>
                 <select
                     id="input-type"
                     aria-label="Input type selector"
-                    className="block w-full px-2 border border-purple-400/[.25] 
-                    rounded bg-background focus:border-purple-500 text-sm"
+                    className="block w-full px-2 border border-purple-400/[.25] rounded bg-background focus:border-purple-500 text-sm"
                     value={inputType}
                     onChange={handleTypeChange}
                 >
@@ -80,6 +115,7 @@ const SidebarItems: React.FC = () => {
                     <option value="dataset">Link to Dataset</option>
                 </select>
 
+                {/* Dynamic input field */}
                 <div>
                     <label htmlFor="dynamic-input" className="block text-xs font-medium">
                         {label}
@@ -96,19 +132,25 @@ const SidebarItems: React.FC = () => {
                     <button
                         onClick={handleSubmit}
                         disabled={isSubmitting}
-                        className="mt-4 bg-blue-500 text-white px-4 py-1 rounded"
+                        className={`mt-4 px-4 py-2 rounded ${
+                            isSubmitting
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-blue-500 text-white hover:bg-blue-600"
+                        }`}
                     >
                         {isSubmitting ? "Submitting..." : "Submit Service"}
                     </button>
                 </div>
             </div>
+
+            {/* Link to visualize data */}
             <div className="my-4">
-                <label htmlFor="input-type" className="text-sm font-medium flex flex-row space-x-2 mt-4">
+                <label htmlFor="data-link" className="text-sm font-medium flex flex-row space-x-2">
                     <Link className="text-green-300 ml-2" />
                     <p>Link to Data to Visualize</p>
                 </label>
                 <Input
-                    id="dynamic-input"
+                    id="data-link"
                     type="text"
                     placeholder="Enter Link to Data"
                     value={dataUrl}
@@ -118,14 +160,13 @@ const SidebarItems: React.FC = () => {
                 />
                 <button
                     onClick={() => inputData(dataUrl)}
-                    className="mt-4 bg-green-500 text-white px-4 py-2 rounded"
+                    className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                 >
                     Submit
                 </button>
-
             </div>
-            <div className="my-4" />
 
+            {/* Newsletter subscription */}
             <div className="space-y-4 mx-2">
                 <SubscriptionForm />
             </div>
