@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { Link, MousePointerClick } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
+import apiClient from "@/lib/apiClient"; // Centralized Axios instance
 
 // In directory components
 import { Input } from "@/components/ui/input";
 import SubscriptionForm from "./SubscriptionForm";
 import { handleDataChange, inputData } from "./db_functions";
-import { addService, parseApiUrl } from "@/components/nav-pages/api-connections/ft_functions";
 
 const SidebarItems: React.FC = () => {
     const [inputType, setInputType] = useState<"api" | "ml-model" | "dataset">("api");
@@ -31,7 +31,8 @@ const SidebarItems: React.FC = () => {
             alert("You need to be logged in to add a service");
             return;
         }
-    
+        
+
         // Capitalize input_type to match database constraint
         const formattedInputType =
             inputType === "api"
@@ -39,41 +40,31 @@ const SidebarItems: React.FC = () => {
                 : inputType === "ml-model"
                 ? "Link to Model"
                 : "Link to Dataset";
-    
+
         const payload = {
             user_id: user.id,
             input_type: formattedInputType,
             data_link: inputValue,
         };
-    
+
         console.log("Submitting payload:", payload);
-    
+
         try {
-            const response = await fetch("/api/add-input", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            });
-    
-            const result = await response.json();
-    
-            if (!response.ok) {
-                console.log("API Error:", result.error);
-                alert(`Failed to add service: ${result.error}`);
-                return;
-            }
-    
+            setIsSubmitting(true);
+
+            // API call to Django backend
+            const response = await apiClient.post("/inputs/", payload);
+
+            console.log("Response:", response.data);
             alert("Service added successfully!");
             setInputValue(""); // Clear input field
         } catch (err) {
-            console.error("Unexpected error:", err);
-            alert("An unexpected error occurred. Please try again.");
+            console.error("Error adding service:", err);
+            alert("Failed to add service. Please try again.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
-    
-    
 
     // Generate dynamic labels and placeholders based on input type
     const getLabelAndPlaceholder = (type: string) => {
