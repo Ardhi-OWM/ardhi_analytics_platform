@@ -1,5 +1,4 @@
 "use client";
-import { supabase } from '@/lib/supabaseClient';
 import { useState } from 'react';
 
 interface Service {
@@ -66,48 +65,38 @@ const AddApi = ({ onClose, onServiceAdded }: {
             console.error('Invalid URL format', error);
         }
     };
-    //  -------------- ------------------------------------------ -------------
-    //  -------------- Insert Service into Supabase and Close Modal -------------
+
+    //  -------------- Save Service Locally Instead of Supabase -------------
     const insertService = async () => {
         setLoading(true);
         try {
-            const { data: existingData, error: existingError } = await supabase
-                .from('services')
-                .select('*')
-                .eq('apiUrl', newService.apiUrl);
+            // Fetch existing services from localStorage
+            const storedServices = localStorage.getItem("services");
+            const existingServices: Service[] = storedServices ? JSON.parse(storedServices) : [];
 
-            if (existingError) {
-                console.error('Error checking for existing URL:', existingError.message);
+            // Check if API already exists
+            if (existingServices.some(service => service.apiUrl === newService.apiUrl)) {
+                alert('This API URL already exists.');
                 setLoading(false);
                 return;
             }
 
-            if (existingData.length > 0) {
-                alert('This API URL already exists in the database.');
-                setLoading(false);
-                return;
-            }
+            // Add new service
+            const updatedServices = [...existingServices, newService];
+            localStorage.setItem("services", JSON.stringify(updatedServices));
 
-            const { data, error } = await supabase
-                .from('services')
-                .insert([newService])
-                .select('*');
+            alert('Service added successfully!');
+            onServiceAdded(newService);
 
-            if (error) {
-                console.error('Error inserting data:', error.message);
-            } else if (data) {
-                alert('Service added successfully!');
-                onServiceAdded(data[0]);
-                setNewService({ name: '', provider: '', type: '', region: '', apiUrl: '' });
-                setApiUrl('');
-                onClose();
-            }
+            // Reset fields
+            setNewService({ name: '', provider: '', type: '', region: '', apiUrl: '' });
+            setApiUrl('');
+            onClose();
         } catch (error) {
             console.error('Unexpected error:', error);
         }
         setLoading(false);
     };
-    //  -------------- ------------------------------------------ -------------
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">

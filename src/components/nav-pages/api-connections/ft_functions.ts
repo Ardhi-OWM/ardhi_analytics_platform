@@ -1,5 +1,4 @@
 "use client";
-import { supabase } from '@/lib/supabaseClient';
 import { useEffect } from 'react';
 import { SetStateAction } from 'react';
 
@@ -16,19 +15,13 @@ interface Service {
 // Typing the state setters correctly
 type SetState<T> = React.Dispatch<React.SetStateAction<T>>;
 
-// ---------------- Fetch Services ----------------
+// ---------------- Fetch Services from LocalStorage ----------------
 export const fetchData = async (userId: string): Promise<Service[]> => {
-    const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .eq('user_id', userId);
-
-    if (error) {
-        console.error('Error fetching data:', error);
-        return [];
-    }
-    return data;
+    const storedServices = localStorage.getItem("services");
+    const services: Service[] = storedServices ? JSON.parse(storedServices) : [];
+    return services.filter(service => service.user_id === userId);
 };
+
 // ---------------- Extract host and region from URL ----------------
 export const parseApiUrl = (url: string) => {
     try {
@@ -66,7 +59,8 @@ export const parseApiUrl = (url: string) => {
         };
     }
 };
-// ---------------- Add a new service to the database ----------------
+
+// ---------------- Add a new service to LocalStorage ----------------
 export const addService = async (
     service: Omit<Service, 'id'>,
     userId: string,
@@ -77,26 +71,31 @@ export const addService = async (
     setIsSubmitting(true);
 
     try {
-        const { data, error } = await supabase
-            .from('services')
-            .insert([{
-                ...service,
-                user_id: userId
-            }])
-            .select('*');
+        // Fetch existing services
+        const storedServices = localStorage.getItem("services");
+        const existingServices: Service[] = storedServices ? JSON.parse(storedServices) : [];
 
-        if (error) throw new Error(error.message);
-
-        if (data) {
-            alert('Service added successfully!');
-            setServices((prev) => [...prev, ...data]);
+        // Check if API already exists
+        if (existingServices.some(s => s.apiUrl === service.apiUrl)) {
+            alert("This API URL already exists.");
+            setIsSubmitting(false);
+            return;
         }
+
+        // Add new service
+        const newService = { ...service, id: Date.now() }; // Mock ID
+        const updatedServices = [...existingServices, newService];
+        localStorage.setItem("services", JSON.stringify(updatedServices));
+
+        alert("Service added successfully!");
+        setServices(updatedServices);
     } catch (error) {
-        console.error('Error adding service:', error);
+        console.error("Error adding service:", error);
     } finally {
         setIsSubmitting(false);
     }
 };
+
 // -------- Handle submit from Sidebar -----------
 export const handleSubmit = async (
     inputValue: string,
@@ -115,7 +114,7 @@ export const handleSubmit = async (
             provider,
             region,
             apiUrl,
-            user_id: user.id  // Added user_id to the object
+            user_id: user.id
         },
         user.id,
         () => { },
@@ -124,7 +123,7 @@ export const handleSubmit = async (
     alert("Service added successfully!");
 };
 
-// ---------------- Delete a Service ----------------
+// ---------------- Delete a Service from LocalStorage ----------------
 export const deleteService = async (
     id: number,
     userId: string,
@@ -134,47 +133,32 @@ export const deleteService = async (
     if (!userId) return;
 
     try {
-        const { error } = await supabase
-            .from('services')
-            .delete()
-            .match({ id, user_id: userId });
+        const storedServices = localStorage.getItem("services");
+        const existingServices: Service[] = storedServices ? JSON.parse(storedServices) : [];
 
-        if (error) {
-            console.error('Error deleting data:', error.message);
-        } else {
-            alert('Service deleted successfully!');
-            setServices((prevServices) => prevServices.filter((service) => service.id !== id));
-        }
+        // Remove the service
+        const updatedServices = existingServices.filter(service => service.id !== id);
+        localStorage.setItem("services", JSON.stringify(updatedServices));
+
+        alert("Service deleted successfully!");
+        setServices(updatedServices);
     } catch (error) {
-        console.error('Unexpected error:', error);
+        console.error("Unexpected error:", error);
     }
 };
 
-// ---------------- Real-time Subscription ----------------
+// ---------------- Real-time Subscription (Replaced with useEffect) ----------------
 export const useServiceSubscription = (userId: string, setServices: SetState<Service[]>) => {
     useEffect(() => {
         if (!userId) return;
 
-        const subscription = supabase
-            .channel('services_updates')
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'services'
-            }, (payload) => {
-                setServices((prev) => {
-                    const ids = new Set(prev.map(service => service.id));
-                    if (!ids.has(payload.new.id)) {
-                        return [...prev, payload.new as Service];
-                    }
-                    return prev;
-                });
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(subscription);
+        // Fetch data initially
+        const fetchServices = async () => {
+            const services = await fetchData(userId);
+            setServices(services);
         };
+
+        fetchServices();
     }, [userId]);
 };
 

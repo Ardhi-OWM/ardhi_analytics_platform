@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { useUser } from '@clerk/nextjs'; // Import Clerk hook
+import { useUser } from '@clerk/nextjs'; // Clerk authentication hook
 
 import AddApi from './AddApi';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,7 +8,7 @@ import ButtonMine from "@/components/reusable/button-mine";
 
 interface Service {
     id?: number;
-    user_id: string;  // Added Clerk user ID
+    user_id: string;  // Clerk user ID remains
     name: string;
     provider: string;
     type: string;
@@ -27,98 +26,44 @@ const ConnectedApiEndpoints = () => {
     useEffect(() => {
         if (!user) return;
 
-        const fetchData = async () => {
-            const { data, error } = await supabase
-                .from('services')
-                .select('*')
-                .eq('user_id', user.id);
-
-            if (error) {
-                console.error('Error fetching data:', error);
-            } else {
-                setServices(data);  //  Clear state and set fresh data
-            }
-        };
-
-        fetchData();
-
-        //  Real-time subscription fixed to avoid overwriting or duplication
-        const subscription = supabase
-            .channel('services_updates')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'services' }, (payload) => {
-                setServices((prev) => {
-                    const ids = new Set(prev.map(service => service.id));
-                    if (!ids.has((payload.new as Service).id)) {
-                        return [...prev, payload.new as Service];
-                    }
-                    return prev;
-                });
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(subscription);
-        };
+        // Fetch data from local storage or external API (if needed)
+        const storedServices = localStorage.getItem("services");
+        if (storedServices) {
+            setServices(JSON.parse(storedServices));
+        }
     }, [user]);
 
-
-
     // ---------- Add a New Service Linked to the User ----------
-
     const addService = async (newService: Service) => {
         if (!user || isSubmitting) return;
-        setIsSubmitting(true);  // Prevent double clicks during submission
+        setIsSubmitting(true);
 
         try {
-            const { data, error } = await supabase
-                .from('services')
-                .insert([{
-                    user_id: user.id,
-                    name: newService.name,
-                    provider: newService.provider,
-                    type: newService.type,
-                    region: newService.region,
-                    apiUrl: newService.apiUrl
-                }])
-                .select();  // Fetch the inserted data directly
+            const updatedServices = [...services, { ...newService, user_id: user.id }];
+            setServices(updatedServices);
+            localStorage.setItem("services", JSON.stringify(updatedServices));
 
-            if (error) {
-                console.error('Supabase Error:', error.message || error);
-                throw new Error(error.message);
-            }
-
-            if (data) {
-                alert('Service added successfully!');
-                setServices((prev) => [...prev, ...data]);
-            }
+            alert('Service added successfully!');
         } catch (error) {
-            console.error('Error adding service:', error instanceof Error ? error.message : error);
+            console.error("Error adding service:", error);
         } finally {
-            setIsSubmitting(false);  // Reset the state after submission
+            setIsSubmitting(false);
         }
     };
 
-
-
-    // ------------- Delete Service from Supabase (User-Specific) -----------
+    // ------------- Delete Service from Local State -----------
     const deleteService = async (id: number) => {
         if (!confirm("Are you sure you want to delete this service?")) return;
         if (!user) return;
 
         try {
-            const { error } = await supabase
-                .from('services')
-                .delete()
-                .match({ id, user_id: user.id }); // Ensure only the user's service is deleted
+            const updatedServices = services.filter((service) => service.id !== id);
+            setServices(updatedServices);
+            localStorage.setItem("services", JSON.stringify(updatedServices));
 
-            if (error) {
-                console.error('Error deleting data:', error.message);
-            } else {
-                alert('Service deleted successfully!');
-                setServices((prevServices) => prevServices.filter((service) => service.id !== id)); // Update state directly
-            }
+            alert("Service deleted successfully!");
         } catch (error) {
-            console.error('Unexpected error:', error);
+            console.error("Error deleting service:", error);
         }
     };
 
@@ -146,17 +91,15 @@ const ConnectedApiEndpoints = () => {
                 </ButtonMine>
             </div>
 
-
             {isModalOpen && (
                 <AddApi
                     onClose={() => setIsModalOpen(false)}
                     onServiceAdded={(service) => addService({
                         ...service,
-                        user_id: user?.id || ''  // Ensuring the correct user is passed here
+                        user_id: user?.id || '' // Ensure user ID is included
                     })}
                 />
             )}
-
 
             {/* ----------------- Services Table -----------------*/}
             <Table>
@@ -164,9 +107,7 @@ const ConnectedApiEndpoints = () => {
                     <TableRow>
                         <TableHead>Name</TableHead>
                         <TableHead>Provider</TableHead>
-                        {/* <TableHead>Type</TableHead> */}
                         <TableHead>Region</TableHead>
-                        {/* <TableHead>Status</TableHead> */}
                         <TableHead>API URL</TableHead>
                         <TableHead>Created At</TableHead>
                         <TableHead>Action</TableHead>
@@ -177,7 +118,6 @@ const ConnectedApiEndpoints = () => {
                         <TableRow key={service.id || index}>
                             <TableCell>{service.name}</TableCell>
                             <TableCell>{service.provider}</TableCell>
-                            {/* <TableCell>{service.type}</TableCell> */}
                             <TableCell>{service.region}</TableCell>
                             <TableCell className="text-sm text-blue-500 underline ibm-plex-mono-regular-italic">
                                 <a href={service.apiUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
@@ -188,7 +128,7 @@ const ConnectedApiEndpoints = () => {
                             <TableCell>
                                 <button
                                     onClick={() => deleteService(service.id!)}
-                                    className="bg-red-400  px-4 py-1 rounded hover:bg-red-600 text-sm"
+                                    className="bg-red-400 px-4 py-1 rounded hover:bg-red-600 text-sm"
                                 >
                                     Delete
                                 </button>
