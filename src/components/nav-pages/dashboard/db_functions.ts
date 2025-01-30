@@ -1,105 +1,116 @@
-// db_functions.ts
-import { Map as PigeonMap } from "pigeon-maps";
+
+"use client";
+
+import React, { useEffect } from "react";
+import L from "leaflet";
+import { useMap } from "react-leaflet";
+import { saveAs } from 'file-saver';
+//import mapshaper from 'mapshaper'; // Ensure mapshaper is installed
+import { GeoJsonObject } from 'geojson';
 
 
-/**
- * Fetches and reads GeoJSON data from a provided URL.
- * @param url - The URL of the GeoJSON file.
- * @returns The parsed GeoJSON data if successful.
- */
-export const inputData = async (url: string) => {
-    try {
-        let processedUrl = url;
+// ------------------  ----------------------------- -----------------
+// ------------------ Custom Search Control (Fixed) ------------------
 
-        // Convert GitHub links to raw file links for direct access
-        if (processedUrl.includes("github.com")) {
-            processedUrl = processedUrl
-                .replace("github.com", "raw.githubusercontent.com")
-                .replace("/blob/", "/");
-        }
+// Download all datasets as a single GeoJSON file
+export const downloadAsGeoJSON = (geoJSONDataList: GeoJsonObject[]) => {
+    if (!geoJSONDataList.length) return;
+  
+    const mergedGeoJSON = {
+      type: 'FeatureCollection',
+      features: geoJSONDataList.flatMap((data: GeoJsonObject) => (data as GeoJSON.FeatureCollection).features || []),
+    };
+  
+    const blob = new Blob([JSON.stringify(mergedGeoJSON, null, 2)], { type: 'application/json' });
+    saveAs(blob, 'datasets.geojson');
+  };
+  
+  // Convert and download as Shapefile
+  /* export const downloadAsShapefile = async (geoJSONDataList: GeoJsonObject[]) => {
+    if (!geoJSONDataList.length) return;
+  
+    const geoJSONString = JSON.stringify({
+      type: 'FeatureCollection',
+      features: geoJSONDataList.flatMap((data: GeoJsonObject) => (data as GeoJSON.FeatureCollection).features || []),
+    });
+  
+     try {
+      const shapefileData = await mapshaper.applyCommands('-i input.geojson -o format=shapefile', {
+        'input.geojson': geoJSONString,
+      }); 
 
-        console.log("Fetching Data from:", processedUrl);
-
-        // Fetching the GeoJSON file
-        const response = await fetch(processedUrl);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch data. Status: ${response.status}`);
-        }
-
-        // Parsing the fetched GeoJSON data
-        const geoJsonData = await response.json();
-        console.log("Data Fetched Successfully:", geoJsonData);
-
-        // Return the GeoJSON data for further processing
-        return geoJsonData;
+      const zipBlob = new Blob([shapefileData['input.zip']], { type: 'application/zip' });
+      saveAs(zipBlob, 'datasets.zip');
     } catch (error) {
-        console.error("Error fetching data:", error);
-        alert("Failed to load data. Please check the link.");
-    }
+      console.error('Error converting to Shapefile:', error);
+    } 
+  }; */
+  
+// ------------------ Custom Search Control (Fixed) ------------------
+const SearchControl: React.FC = () => {
+    const map = useMap();
+
+    useEffect(() => {
+        const searchContainer = L.DomUtil.create("div", "leaflet-bar");
+        searchContainer.style.padding = "2px";
+        searchContainer.style.background = "white";
+        searchContainer.style.borderRadius = "2px";
+        searchContainer.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+
+        const searchInput = L.DomUtil.create("input", "leaflet-search-input", searchContainer);
+        searchInput.type = "text";
+        searchInput.placeholder = "Search location...";
+        searchInput.style.width = "200px";
+        searchInput.style.border = "none";
+        searchInput.style.outline = "none";
+        searchInput.style.padding = "4px";
+
+        const CustomSearchControl = L.Control.extend({
+            onAdd: function () {
+                return searchContainer;
+            },
+            onRemove: function () {
+            }
+        });
+
+        const searchControl = new CustomSearchControl({ position: "topright" });
+        searchControl.addTo(map);
+
+        searchInput.addEventListener("keydown", async (event) => {
+            if (event.key === "Enter") {
+                const query = searchInput.value.trim();
+                if (!query) return;
+
+                try {
+                    const response = await fetch(
+                        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`
+                    );
+                    const data = await response.json();
+
+                    if (data.length > 0) {
+                        //const { lat, lon, display_name } = data[0];
+                        const { lat, lon} = data[0];
+                        const latlng = L.latLng(parseFloat(lat), parseFloat(lon));
+
+                        // Center map on the searched location without zooming
+                        map.setView(latlng, map.getZoom());
+                        //L.marker(latlng).addTo(map).bindPopup(display_name).openPopup();
+                    } else {
+                        alert("No results found.");
+                    }
+                } catch (error) {
+                    console.error("Error fetching location:", error);
+                }
+            }
+        });
+
+        return () => {
+            map.removeControl(searchControl);
+        };
+    }, [map]);
+
+    return null;
 };
 
-
-/**
- * Handles submission of GeoJSON data for Pigeon Maps.
- * @param dataUrl URL for the GeoJSON data
- * @param mapRef Pigeon Map instance reference
- * @param setGeoJsonData Callback to store GeoJSON data in state
- */
-export const handleSubmitData = async (
-    dataUrl: string,
-    mapRef: React.RefObject<PigeonMap | null>,
-    setGeoJsonData: React.Dispatch<React.SetStateAction<GeoJSON.FeatureCollection>>
-) => {
-    try {
-        if (!mapRef.current) {
-            throw new Error("Map instance not available");
-        }
-
-        if (!dataUrl.startsWith('http://') && !dataUrl.startsWith('https://')) {
-            throw new Error("Invalid URL. Please use a valid link with 'http://' or 'https://'");
-        }
-
-        let processedUrl = dataUrl;
-        if (processedUrl.includes("github.com")) {
-            processedUrl = processedUrl
-                .replace("github.com", "raw.githubusercontent.com")
-                .replace("/blob/", "/");
-        }
-
-        const response = await fetch(processedUrl);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch data. Status: ${response.status}`);
-        }
-
-        const geoJsonData = await response.json();
-        console.log("GeoJSON Data Fetched Successfully:", geoJsonData);
-
-        // ✅ Store GeoJSON data for rendering in the map
-        setGeoJsonData(geoJsonData);
-        alert("GeoJSON data visualized on the map!");
-
-    } catch (error) {
-        console.error("Error fetching data:", error);
-        if (error instanceof Error) {
-            alert(`Error: ${error.message}`);
-        } else {
-            alert("An unknown error occurred.");
-        }
-    }
-};
-
-
-
-// db_functions.ts
-/**
- * Handles input changes for updating the data URL state.
- * @param event - The event object from the input field.
- * @param setDataUrl - The state setter function for updating the dataUrl state.
- */
-export const handleDataChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    setDataUrl: React.Dispatch<React.SetStateAction<string>>
-) => {
-    setDataUrl(event.target.value);
-};
-
+export default SearchControl;
+// ------------------  ----------------------------- -----------------

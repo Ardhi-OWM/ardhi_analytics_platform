@@ -1,91 +1,62 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PanelLeftOpen, PanelRightOpen, ChevronDown, ChevronUp } from "lucide-react";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import * as L from 'leaflet';
+import { MapContainer, TileLayer, useMap,GeoJSON } from "react-leaflet";
+import { GeoJsonObject } from 'geojson';
 
 import { mapLayers } from "@/components/constants";
 import SidebarItems from "@/components/nav-pages/dashboard/SidebarItems";
 
-// ------------------ Custom Search Control (Fixed) ------------------
-const SearchControl: React.FC = () => {
-    const map = useMap();
+import SearchControl from "@/components/nav-pages/dashboard/db_functions";
 
-    useEffect(() => {
-        const searchContainer = L.DomUtil.create("div", "leaflet-bar");
-        searchContainer.style.padding = "2px";
-        searchContainer.style.background = "white";
-        searchContainer.style.borderRadius = "2px";
-        searchContainer.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
 
-        const searchInput = L.DomUtil.create("input", "leaflet-search-input", searchContainer);
-        searchInput.type = "text";
-        searchInput.placeholder = "Search location...";
-        searchInput.style.width = "200px";
-        searchInput.style.border = "none";
-        searchInput.style.outline = "none";
-        searchInput.style.padding = "4px";
+interface MapProps {
+    geoJSONDataList?: GeoJsonObject[];
+}
 
-        const CustomSearchControl = L.Control.extend({
-            onAdd: function () {
-                return searchContainer;
-            },
-            onRemove: function () {
-            }
-        });
-
-        const searchControl = new CustomSearchControl({ position: "topright" });
-        searchControl.addTo(map);
-
-        searchInput.addEventListener("keydown", async (event) => {
-            if (event.key === "Enter") {
-                const query = searchInput.value.trim();
-                if (!query) return;
-
-                try {
-                    const response = await fetch(
-                        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`
-                    );
-                    const data = await response.json();
-
-                    if (data.length > 0) {
-                        //const { lat, lon, display_name } = data[0];
-                        const { lat, lon} = data[0];
-                        const latlng = L.latLng(parseFloat(lat), parseFloat(lon));
-
-                        // Center map on the searched location without zooming
-                        map.setView(latlng, map.getZoom());
-                        //L.marker(latlng).addTo(map).bindPopup(display_name).openPopup();
-                    } else {
-                        alert("No results found.");
-                    }
-                } catch (error) {
-                    console.error("Error fetching location:", error);
-                }
-            }
-        });
-
-        return () => {
-            map.removeControl(searchControl);
-        };
-    }, [map]);
-
-    return null;
-};
 
 // ------------------  Main DashboardMap Component (No map changes) ------------------
-export default function DashboardMap() {
+const DashboardMap: React.FC<MapProps> = () => { // Default to empty array
+
+    const [geoJSONDataList, setGeoJSONDataList] = useState<GeoJsonObject[]>([]);
+
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
     const [activeLayer, setActiveLayer] = useState(
         mapLayers.find(layer => layer.default)?.url || mapLayers[0].url
     );
+
+    const MapBounds: React.FC = () => {
+        const map = useMap();
+
+        useEffect(() => {
+            if (!geoJSONDataList.length || !map) return; // Ensure there is data
+
+            const allBounds = geoJSONDataList
+                .map((geoJSON) => {
+                    const layer = L.geoJSON(geoJSON as GeoJsonObject);
+                    return layer.getBounds();
+                })
+                .filter((bounds) => bounds.isValid());
+
+            if (allBounds.length === 0) return;
+
+            const mergedBounds = allBounds.reduce((acc, bounds) => acc.extend(bounds), allBounds[0]);
+
+            if (mergedBounds.isValid()) {
+                map.fitBounds(mergedBounds);
+            }
+        }, [geoJSONDataList, map]);
+
+        return null;
+    };
 
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
@@ -100,7 +71,7 @@ export default function DashboardMap() {
 
                 {sidebarOpen && (
                     <Box className="mt-2">
-                        <SidebarItems />
+                        <SidebarItems geoJSONDataList={geoJSONDataList} setGeoJSONDataList={setGeoJSONDataList} />
                     </Box>
                 )}
             </div>
@@ -112,13 +83,18 @@ export default function DashboardMap() {
                         <MapContainer
                             center={[52.520008, 13.404954]}
                             zoom={13}
-                            scrollWheelZoom={false}  // 🔥 Keeps the map behavior unchanged
+                            scrollWheelZoom={false}  // Keeps the map behavior unchanged
                             style={{ width: "100%", height: "100%" }}
                         >
                             {/*  Custom Search Control (Replaces GeoSearchControl) */}
                             <SearchControl />
                             {/*  Map Layer */}
                             <TileLayer key={activeLayer} url={activeLayer} />
+                            {/* Prevents error by ensuring geoJSONDataList is always an array */}
+                            {geoJSONDataList.map((geoJSONData, index) => (
+                                <GeoJSON key={index} data={geoJSONData} />
+                            ))}
+                            <MapBounds />
                         </MapContainer>
                     </div>
                 </div>
@@ -159,3 +135,4 @@ export default function DashboardMap() {
         </div>
     );
 }
+export default DashboardMap;
