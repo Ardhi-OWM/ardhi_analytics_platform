@@ -182,7 +182,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             <div className="my-4">
                 <label htmlFor="data-link" className="text-sm font-medium flex flex-row space-x-2">
                     <Link className="text-green-300 ml-1" />
-                    <p>Load GeoJSON from URL</p>
+                    <p>Load Data to Visualize </p>
                 </label>
                 {/* File Upload */}
                 <FileUpload onFileUpload={handleFileUpload} />
@@ -197,10 +197,12 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                 />
                 <button
                     onClick={handleUrlLoad}
-                    className="mt-4 bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600 text-xs"
+                    className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 text-base font-medium"
                 >
                     Submit
                 </button>
+
+
             </div>
             {/* ----------------- ------------------------------------------ */}
             {/* ----------------- Uploaded Datasets ---------------- */}
