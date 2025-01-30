@@ -1,10 +1,12 @@
 "use client";
 // Precoded components
 import { useState } from "react";
-import { Link, MousePointerClick } from "lucide-react";
+import { MousePointerClick } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import apiClient from "@/lib/apiClient"; // Centralized Axios instance
-import { GeoJsonObject } from "geojson";
+import { GeoJsonObject, FeatureCollection } from "geojson";
+import proj4 from "proj4";
+import { toWgs84 } from "@turf/projection";
 
 // In directory components
 import { Input } from "@/components/ui/input";
@@ -98,21 +100,70 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
     // ------------------  ----------------------------- -----------------
     // ---------------------- Handle file upload -----------------------
 
+    /*  const handleFileUpload = async (uploadedFile: File) => {
+         if (uploadedFile.name.endsWith(".geojson")) {
+             try {
+                 const fileText = await uploadedFile.text();
+                 const geoJSON = JSON.parse(fileText) as GeoJsonObject;
+                 setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
+                 console.log("Uploaded GeoJSON:", geoJSON);
+             } catch (error) {
+                 console.error("Error parsing GeoJSON:", error);
+             }
+         } else {
+             console.log("Unsupported file format");
+         }
+     }; */
     const handleFileUpload = async (uploadedFile: File) => {
-        if (uploadedFile.name.endsWith(".geojson")) {
-            try {
-                const fileText = await uploadedFile.text();
-                const geoJSON = JSON.parse(fileText) as GeoJsonObject;
-                setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
-                console.log("Uploaded GeoJSON:", geoJSON);
-            } catch (error) {
-                console.error("Error parsing GeoJSON:", error);
-            }
-        } else {
+        if (!uploadedFile.name.endsWith(".geojson")) {
             console.log("Unsupported file format");
+            return;
+        }
+
+        try {
+            const fileText = await uploadedFile.text();
+            let geoJSON = JSON.parse(fileText) as FeatureCollection;
+
+            // Check if the GeoJSON has a CRS property
+            const geoJSONWithCRS = geoJSON as FeatureCollection & { crs?: { properties?: { name?: string } } };
+            if (geoJSONWithCRS.crs && geoJSONWithCRS.crs.properties && geoJSONWithCRS.crs.properties.name) {
+                const originalCrs = geoJSONWithCRS.crs.properties.name;
+                console.log("Detected CRS:", originalCrs);
+
+                // Convert CRS if it's not EPSG:4326
+                if (originalCrs !== "urn:ogc:def:crs:OGC:1.3:CRS84" && originalCrs !== "EPSG:4326") {
+                    geoJSON = transformGeoJSON(geoJSON, originalCrs);
+                }
+            } else {
+                console.warn("No CRS detected, assuming EPSG:4326");
+            }
+
+            setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
+            console.log("Uploaded and transformed GeoJSON:", geoJSON);
+        } catch (error) {
+            console.error("Error parsing GeoJSON:", error);
         }
     };
 
+    // Transform GeoJSON to EPSG:4326 (WGS84)
+    const transformGeoJSON = (geoJSON: FeatureCollection, sourceCrs: string): FeatureCollection => {
+        try {
+            proj4.defs([
+                ["EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs"],
+                ["EPSG:3857", "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"],
+            ]);
+
+            // Define source CRS in Proj4
+            if (!proj4.defs(sourceCrs)) {
+                console.warn(`Unknown CRS: ${sourceCrs}. Attempting transformation to EPSG:4326`);
+            }
+
+            return toWgs84(geoJSON, { mutate: true });
+        } catch (error) {
+            console.error("Error transforming CRS:", error);
+            return geoJSON; // Return original data if conversion fails
+        }
+    };
     // ------------------  ----------------------------- -----------------
     // -------------------------- Handle URL Load ------------------------
 
@@ -181,11 +232,12 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             {/* ----------------- Link to visualize data ---------------- */}
             <div className="my-4">
                 <label htmlFor="data-link" className="text-sm font-medium flex flex-row space-x-2">
-                    <Link className="text-green-300 ml-1" />
                     <p>Load GeoJSON from URL</p>
                 </label>
                 {/* File Upload */}
+
                 <FileUpload onFileUpload={handleFileUpload} />
+                <p className="text-sm roboto-mono-semibold"> Using a Link?</p>
                 <Input
                     id="data-link"
                     type="text"
@@ -195,6 +247,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                     className="border-purple-400/[.25] g focus:border-purple-500 ibm-plex-mono-regular-italic text-sm "
                     aria-label="Data Link"
                 />
+
                 <button
                     onClick={handleUrlLoad}
                     className="mt-4 bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600 text-xs"
@@ -206,8 +259,8 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             {/* ----------------- Uploaded Datasets ---------------- */}
 
             <div>
-                <h2 className="text-xl font-bold">Uploaded Datasets</h2>
-                {geoJSONDataList.length === 0 && <p>No datasets uploaded yet.</p>}
+                <h1 className="text-base font-bold">Uploaded Datasets</h1>
+                {geoJSONDataList.length === 0 && <p className="text-sm">No datasets uploaded yet.</p>}
                 <ul className="mt-2">
                     {geoJSONDataList.map((_, index) => (
                         <li key={index} className="flex justify-between items-center bg-gray-200 p-2 mb-2">
@@ -232,3 +285,5 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
 };
 
 export default SidebarItems;
+
+

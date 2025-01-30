@@ -4,16 +4,17 @@ import React, { useState, useEffect } from "react";
 import { PanelLeftOpen, PanelRightOpen, ChevronDown, ChevronUp } from "lucide-react";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-
 import "leaflet/dist/leaflet.css";
 import * as L from 'leaflet';
-import { MapContainer, TileLayer, useMap,GeoJSON } from "react-leaflet";
-import { GeoJsonObject } from 'geojson';
+import { MapContainer, TileLayer, useMap, GeoJSON } from "react-leaflet";
+import { GeoJsonObject, Geometry, Feature, GeoJsonProperties } from 'geojson';
+import { featureCollection } from "@turf/helpers";
+import { toMercator } from "@turf/projection";
 
+
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { mapLayers } from "@/components/constants";
 import SidebarItems from "@/components/nav-pages/dashboard/SidebarItems";
-
 import SearchControl from "@/components/nav-pages/dashboard/db_functions";
 
 
@@ -33,6 +34,8 @@ const DashboardMap: React.FC<MapProps> = () => { // Default to empty array
         mapLayers.find(layer => layer.default)?.url || mapLayers[0].url
     );
 
+    // --------------- ----------------------------------------------------------------
+    // --------------- Zoom to data bounds when data is loaded or changed-------------
     const MapBounds: React.FC = () => {
         const map = useMap();
 
@@ -56,6 +59,22 @@ const DashboardMap: React.FC<MapProps> = () => { // Default to empty array
         }, [geoJSONDataList, map]);
 
         return null;
+    };
+
+    // --------------- ----------------------------------------------------------------
+    // --------------- Change data to Leaflet CRS-------------
+    useEffect(() => {
+        geoJSONDataList.forEach((data, index) => {
+            if ("features" in data) {
+                console.log(`Dataset ${index + 1}:`, data);
+            }
+        });
+    }, [geoJSONDataList]);
+
+    // Convert GeoJSON to EPSG:3857 (Web Mercator) for Leaflet
+    const convertToEPSG3857 = (geoJSON: GeoJsonObject) => {
+        if (!("features" in geoJSON)) return geoJSON;
+        return toMercator(featureCollection(geoJSON.features as Feature<Geometry, GeoJsonProperties>[]));
     };
 
     return (
@@ -95,6 +114,9 @@ const DashboardMap: React.FC<MapProps> = () => { // Default to empty array
                                 <GeoJSON key={index} data={geoJSONData} />
                             ))}
                             <MapBounds />
+                            {geoJSONDataList.map((geoJSON, index) => (
+                                <GeoJSON key={index} data={convertToEPSG3857(geoJSON)} />
+                            ))}
                         </MapContainer>
                     </div>
                 </div>
