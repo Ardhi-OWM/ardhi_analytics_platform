@@ -7,11 +7,16 @@ import Box from "@mui/material/Box";
 import "leaflet/dist/leaflet.css";
 import * as L from 'leaflet';
 import { MapContainer, TileLayer, useMap, GeoJSON } from "react-leaflet";
-import { GeoJsonObject } from 'geojson';
+import { GeoJsonObject, Feature, Geometry, GeoJsonProperties } from 'geojson';
+import { featureCollection } from "@turf/helpers";
+import { toMercator } from "@turf/projection";
+
 
 import { mapLayers } from "@/components/constants";
 import SidebarItems from "@/components/nav-pages/dashboard/SidebarItems";
 import SearchControl from "@/components/nav-pages/dashboard/db_functions";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+
 
 interface MapProps {
     geoJSONDataList?: GeoJsonObject[];
@@ -96,8 +101,9 @@ const DashboardMap: React.FC<MapProps> = () => {
                 >
                     <SearchControl />
                     <TileLayer key={activeLayer} url={activeLayer} />
+
                     {geoJSONDataList.map((geoJSONData, index) => (
-                        <GeoJSON key={index} data={geoJSONData} />
+                        <GeoJSON key={index} data={convertToEPSG3857(geoJSONData)} />
                     ))}
                     <MapBounds />
 
@@ -137,3 +143,5 @@ const DashboardMap: React.FC<MapProps> = () => {
 }
 
 export default DashboardMap;
+
+
