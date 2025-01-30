@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, {  useEffect, useState } from "react";
 import { PanelLeftOpen, PanelRightOpen, ChevronDown, ChevronUp } from "lucide-react";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
@@ -16,14 +16,14 @@ import { mapLayers } from "@/components/constants";
 import SidebarItems from "@/components/nav-pages/dashboard/SidebarItems";
 
 
-// ------------------ 📌 Custom Search Control Component ------------------
+// ------------------ Custom Search Control Component ------------------
 const SearchControl: React.FC = () => {
     const map = useMap();
 
     useEffect(() => {
         const provider = new OpenStreetMapProvider();
 
-        const searchControl = new (GeoSearchControl as any)({ // ✅ Explicitly cast to `any`
+        const searchControl = new (GeoSearchControl as any)({ // Explicitly cast to `any`
             provider: provider,
             style: "bar",
             position: "topright",
