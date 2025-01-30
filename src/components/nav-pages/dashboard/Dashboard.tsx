@@ -1,44 +1,75 @@
 "use client";
 
-import React, {  useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { PanelLeftOpen, PanelRightOpen, ChevronDown, ChevronUp } from "lucide-react";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 import L from "leaflet";
-import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
-import "leaflet-geosearch/dist/geosearch.css";
+import "leaflet/dist/leaflet.css";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
-import "leaflet/dist/leaflet.css"; // Important: import Leaflet styles
 
 import { mapLayers } from "@/components/constants";
 import SidebarItems from "@/components/nav-pages/dashboard/SidebarItems";
 
-
-// ------------------ Custom Search Control Component ------------------
+// ------------------ Custom Search Control (Fixed) ------------------
 const SearchControl: React.FC = () => {
     const map = useMap();
 
     useEffect(() => {
-        const provider = new OpenStreetMapProvider();
+        const searchContainer = L.DomUtil.create("div", "leaflet-bar");
+        searchContainer.style.padding = "2px";
+        searchContainer.style.background = "white";
+        searchContainer.style.borderRadius = "2px";
+        searchContainer.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
 
-        const searchControl = new (GeoSearchControl as any)({ // Explicitly cast to `any`
-            provider: provider,
-            style: "bar",
-            position: "topright",
-            showMarker: true,
-            showPopup: false,
-            marker: {
-                icon: new L.Icon({
-                    iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-                    shadowUrl:
-                        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-                }),
+        const searchInput = L.DomUtil.create("input", "leaflet-search-input", searchContainer);
+        searchInput.type = "text";
+        searchInput.placeholder = "Search location...";
+        searchInput.style.width = "200px";
+        searchInput.style.border = "none";
+        searchInput.style.outline = "none";
+        searchInput.style.padding = "4px";
+
+        const CustomSearchControl = L.Control.extend({
+            onAdd: function () {
+                return searchContainer;
             },
+            onRemove: function () {
+            }
         });
 
-        map.addControl(searchControl);
+        const searchControl = new CustomSearchControl({ position: "topright" });
+        searchControl.addTo(map);
+
+        searchInput.addEventListener("keydown", async (event) => {
+            if (event.key === "Enter") {
+                const query = searchInput.value.trim();
+                if (!query) return;
+
+                try {
+                    const response = await fetch(
+                        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`
+                    );
+                    const data = await response.json();
+
+                    if (data.length > 0) {
+                        //const { lat, lon, display_name } = data[0];
+                        const { lat, lon} = data[0];
+                        const latlng = L.latLng(parseFloat(lat), parseFloat(lon));
+
+                        // Center map on the searched location without zooming
+                        map.setView(latlng, map.getZoom());
+                        //L.marker(latlng).addTo(map).bindPopup(display_name).openPopup();
+                    } else {
+                        alert("No results found.");
+                    }
+                } catch (error) {
+                    console.error("Error fetching location:", error);
+                }
+            }
+        });
 
         return () => {
             map.removeControl(searchControl);
@@ -48,8 +79,7 @@ const SearchControl: React.FC = () => {
     return null;
 };
 
-
-// ------------------ 📌 Main DashboardMap Component ------------------
+// ------------------  Main DashboardMap Component (No map changes) ------------------
 export default function DashboardMap() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
@@ -82,18 +112,18 @@ export default function DashboardMap() {
                         <MapContainer
                             center={[52.520008, 13.404954]}
                             zoom={13}
-                            scrollWheelZoom={false}
+                            scrollWheelZoom={false}  // 🔥 Keeps the map behavior unchanged
                             style={{ width: "100%", height: "100%" }}
                         >
-                            {/* 🔍 Search Control */}
+                            {/*  Custom Search Control (Replaces GeoSearchControl) */}
                             <SearchControl />
-                            {/* 🌍 Map Layer */}
+                            {/*  Map Layer */}
                             <TileLayer key={activeLayer} url={activeLayer} />
                         </MapContainer>
                     </div>
                 </div>
 
-                {/* --------------- 📌 Layer Selector & Dropdown ------------- */}
+                {/* ---------------  Layer Selector & Dropdown ------------- */}
                 <div className="absolute bottom-2 left-2 z-50"
                     style={{ zIndex: 1000 }} // Increase z-index explicitly
                 >
