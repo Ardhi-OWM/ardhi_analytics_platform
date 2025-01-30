@@ -17,16 +17,15 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
   return (
-    <div className='flex flex-col items-center justify-center'>
-      <div {...getRootProps()}
-        // style={{ border: '2px dashed #007bff', padding: '20px', textAlign: 'center' }}
-        className='border border-dashed border-purple-300  text-center my-2 w-4/5'
+    <div className="flex flex-col items-center justify-center">
+      <div
+        {...getRootProps()}
+        className="border-2 border-dashed border-blue-500 text-center my-2 w-full max-w-lg h-35 p-6 flex items-center justify-center bg-gray-100 hover:bg-gray-200 transition-all duration-300 rounded-lg"
       >
         <input {...getInputProps()} />
-        <p className='text-xs'>Drag & drop file or click to select </p>
+        <p className="text-sm text-gray-600">Drag & drop or file here or click to upload</p>
       </div>
     </div>
-
   );
 };
 
