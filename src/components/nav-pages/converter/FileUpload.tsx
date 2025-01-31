@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { CloudUpload, X, RefreshCw } from 'lucide-react';
-import { FileType } from './types'; // Import from the shared types file
+import { FileType } from "@/utils/types";
 
 interface FileUploadProps {
     onFileSelect: (file: FileType) => void;
@@ -13,18 +13,23 @@ export default function FileUpload({ onFileSelect }: FileUploadProps) {
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
         const file = event.target.files ? event.target.files[0] : null;
+    
         if (file) {
-            const newFile: FileType = {
+            const newFile = {
+                file,
                 name: file.name,
                 size: file.size,
                 progress: 0,
                 uploaded: false
-            };
+            } as FileType; 
+    
             setSelectedFile(newFile);
             simulateFileUpload(newFile);
-            onFileSelect(newFile);
+            onFileSelect(newFile); // Pass the full FileType object
         }
     };
+    
+    
 
     const simulateFileUpload = (file: FileType) => {
         let progress = 0;

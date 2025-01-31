@@ -25,12 +25,20 @@ export const headerLinks = [
 // ------------------- FileFormats Links ------------------- //
 
 export const fileFormats = [
-    { value: "geojson", label: "GeoJSON" },
-    { value: "csv", label: "CSV" },
-    { value: "html", label: "HTML(Leaflet)" },
-    { value: "shp", label: "Shapefile" },
-    { value: "kml", label: "KML" }
+    // GIS & Geospatial Formats
+    { value: "geojson", label: "GeoJSON (.geojson)" },
+    { value: "kml", label: "KML (.kml)" },
+    { value: "gpx", label: "GPX (.gpx)" },
+    { value: "csv", label: "CSV (.csv)" },
+    { value: "tif", label: "GeoTIFF (.tif)" }, 
+    
+    // Text & Document Formats
+    { value: "json", label: "JSON (.json)" },
+    { value: "xml", label: "XML (.xml)" },
+    { value: "txt", label: "Plain Text (.txt)" },
+    { value: "md", label: "Markdown (.md)" },
 ];
+
 
 // ------------------- Dashboard Links ------------------- //
 export const helpLinks = [

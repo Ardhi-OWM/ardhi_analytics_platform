@@ -1,8 +1,10 @@
 // types.ts
-export interface FileType {
+
+export type FileType = {
+    file: File;
     name: string;
     size: number;
     progress: number;
-    error?: boolean;
     uploaded: boolean;
-}
+    error?: boolean;
+};
