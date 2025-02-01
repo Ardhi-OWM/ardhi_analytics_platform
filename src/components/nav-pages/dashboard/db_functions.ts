@@ -8,7 +8,27 @@ import { saveAs } from 'file-saver';
 //import mapshaper from 'mapshaper'; // Ensure mapshaper is installed
 import { GeoJsonObject } from 'geojson';
 
+// ------------------  ----------------------------- -----------------
+// ------------------ Extract file name  ------------------
 
+// Helper function to extract the file name from a URL or return the original name
+const extractDatasetName = (name: string): string => {
+  try {
+    // Attempt to create a URL object
+    const url = new URL(name);
+    // Get the pathname (e.g., "/mapbox-gl-js/assets/ne_50m_urban_areas.geojson")
+    const pathname = url.pathname;
+    // Extract the last segment after the final slash
+    const lastSegment = pathname.split("/").pop() || "";
+    // Remove the file extension using a regular expression
+    return lastSegment.replace(/\.[^/.]+$/, "");
+  } catch (error) {
+    console.error("Error extracting dataset name:", error);
+    // If an error occurs, it's likely not a valid URL
+    // Return the original name (or process it differently if needed)
+    return name;
+  }
+};
 // ------------------  ----------------------------- -----------------
 // ------------------ Custom Search Control (Fixed) ------------------
 

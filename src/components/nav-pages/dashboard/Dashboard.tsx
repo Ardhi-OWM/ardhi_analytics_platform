@@ -114,7 +114,7 @@ const DashboardMap: React.FC<MapProps> = () => {
                             <DropdownMenuContent
                                 side="top"
                                 align="start"
-                                className="border border-gray-300 rounded-lg shadow-md bg-white"
+                                className="border border-gray-300 rounded-lg shadow-md "
                                 style={{ zIndex: 1001 }}
                             >
                                 {mapLayers.map((layer) => (

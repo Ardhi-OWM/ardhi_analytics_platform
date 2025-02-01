@@ -266,10 +266,10 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                 {geoJSONDataList.length === 0 && <p className="text-sm">No datasets uploaded yet.</p>}
                 <ul className="mt-2">
                     {geoJSONDataList.map((_, index) => (
-                        <li key={index} className="flex justify-between items-center bg-gray-200 p-2 mb-2">
+                        <li key={index} className="flex justify-between items-center p-2 mb-2">
                             <span>Dataset {index + 1}</span>
                             <button
-                                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                                className="bg-red-500  px-3  rounded hover:bg-red-600"
                                 onClick={() => setGeoJSONDataList((prevData) => prevData.filter((_, i) => i !== index))}
                             >
                                 Remove
