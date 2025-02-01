@@ -38,7 +38,7 @@ const SubscriptionForm: React.FC = () => {
 
     return (
         <form onSubmit={handleSubscription} className="space-y-4 mt-8">
-            <label htmlFor="email" className="block text-sm font-medium">
+            <label htmlFor="email" className="block text-xs font-bold uppercase">
                 Subscribe to Our Newsletter
             </label>
             <input
@@ -47,19 +47,20 @@ const SubscriptionForm: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="block w-full px-3 py-2 border border-gray-400/[.25] rounded-md focus:ring focus:border-blue-500"
+                className="block w-full px-3 py-2 border text-xs  border-gray-400/[.25] rounded-md focus:ring
+                 focus:border-blue-500 ibm-plex-mono-regular-italic"
                 required
             />
             <button
                 type="submit"
-                className={`w-full px-4 py-2 bg-blue-500 rounded hover:bg-blue-600 ${
-                    loading ? "opacity-50 cursor-not-allowed" : ""
+                className={`w-3/4 px-4 py-1 bg-blue-500 rounded hover:bg-blue-600 text-sm dark:text-black text-white ${
+                    loading ? "opacity-50 cursor-not-allowed " : ""
                 }`}
                 disabled={loading}
             >
                 {loading ? "Subscribing..." : "Subscribe"}
             </button>
-            {message && <p className="text-sm text-center mt-2">{message}</p>}
+            {message && <p className="text-sm text-center mt-2 " >{message}</p>}
         </form>
     );
 };

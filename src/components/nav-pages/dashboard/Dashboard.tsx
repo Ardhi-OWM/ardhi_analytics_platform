@@ -88,7 +88,7 @@ const DashboardMap: React.FC<MapProps> = () => {
                 <MapContainer
                     center={[52.520008, 13.404954]}
                     zoom={13}
-                    scrollWheelZoom={false}
+                    scrollWheelZoom={true}
                     style={{ width: "100%", height: "100%" }}
                     className="w-full h-full"
                 >

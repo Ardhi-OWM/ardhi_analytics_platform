@@ -100,20 +100,6 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
     // ------------------  ----------------------------- -----------------
     // ---------------------- Handle file upload -----------------------
 
-    /*  const handleFileUpload = async (uploadedFile: File) => {
-         if (uploadedFile.name.endsWith(".geojson")) {
-             try {
-                 const fileText = await uploadedFile.text();
-                 const geoJSON = JSON.parse(fileText) as GeoJsonObject;
-                 setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
-                 console.log("Uploaded GeoJSON:", geoJSON);
-             } catch (error) {
-                 console.error("Error parsing GeoJSON:", error);
-             }
-         } else {
-             console.log("Unsupported file format");
-         }
-     }; */
     const handleFileUpload = async (uploadedFile: File) => {
         if (!uploadedFile.name.endsWith(".geojson")) {
             console.log("Unsupported file format");
@@ -187,7 +173,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             <div className="space-y-4">
                 <label htmlFor="input-type" className="text-sm font-medium flex flex-row space-x-2">
                     <MousePointerClick className="text-green-300 ml-2 rotate-90" />
-                    <p>Select Input Type</p>
+                    <p className=" uppercase font-bold">Select Input Type</p>
                 </label>
                 <select
                     id="input-type"
@@ -218,9 +204,9 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                     <button
                         onClick={handleSubmit}
                         disabled={isSubmitting}
-                        className={`mt-4 px-4 py-2 rounded ${isSubmitting
+                        className={`mt-4 px-4 py-1 rounded ${isSubmitting
                             ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-blue-500 text-white hover:bg-blue-600"
+                            : "bg-blue-500 text-white dark:text-black hover:bg-blue-600 w-3/4 text-sm"
                             }`}
                     >
                         {isSubmitting ? "Submitting..." : "Submit Service"}
@@ -233,25 +219,25 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             <div className="my-4">
                 <label htmlFor="data-link" className="text-sm font-medium flex flex-row space-x-2">
                     <Link className="text-green-300 ml-1" />
-                    <p>Load Data to Visualize </p>
+                    <p className=" uppercase font-bold">Load Data to Visualize </p>
                 </label>
                 {/* File Upload */}
 
                 <FileUpload onFileUpload={handleFileUpload} />
-                <p className="text-sm roboto-mono-semibold"> Using a Link?</p>
+                <p className="text-sm pb-2 "> Using a Link?</p>
                 <Input
                     id="data-link"
                     type="text"
                     placeholder="Enter Link to Data"
                     value={dataUrl}
                     onChange={(e) => setDataUrl(e.target.value)}
-                    className="border-purple-400/[.25] g focus:border-purple-500 ibm-plex-mono-regular-italic text-sm "
+                    className="border-purple-400/[.25]  focus:border-purple-500 ibm-plex-mono-regular-italic text-xs "
                     aria-label="Data Link"
                 />
 
                 <button
                     onClick={handleUrlLoad}
-                    className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 text-base font-medium"
+                    className="w-3/4 mt-4 bg-green-500 text-white dark:text-black px-4 py-1 rounded hover:bg-green-600 text-sm font-medium"
                 >
                     Submit
                 </button>
@@ -262,14 +248,14 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             {/* ----------------- Uploaded Datasets ---------------- */}
 
             <div>
-                <h1 className="text-base font-bold">Uploaded Datasets</h1>
+                <h1 className="text-sm font-bold">Uploaded Datasets</h1>
                 {geoJSONDataList.length === 0 && <p className="text-sm">No datasets uploaded yet.</p>}
                 <ul className="mt-2">
                     {geoJSONDataList.map((_, index) => (
                         <li key={index} className="flex justify-between items-center p-2 mb-2">
-                            <span>Dataset {index + 1}</span>
+                            <span className="text-sm">Dataset {index + 1}</span>
                             <button
-                                className="bg-red-500  px-3  rounded hover:bg-red-600"
+                                className="bg-red-500  px-3  rounded hover:bg-red-600 text-sm"
                                 onClick={() => setGeoJSONDataList((prevData) => prevData.filter((_, i) => i !== index))}
                             >
                                 Remove
@@ -288,5 +274,4 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
 };
 
 export default SidebarItems;
-
 
