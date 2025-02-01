@@ -159,7 +159,7 @@ export const useServiceSubscription = (userId: string, setServices: SetState<Ser
         };
 
         fetchServices();
-    }, [userId]);
+    }, [userId, setServices]);
 };
 
 // ---------------- Date Formatting Helper ----------------

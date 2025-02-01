@@ -7,6 +7,9 @@ import { fileFormats } from '@/components/constants';
 import FileUpload from './FileUpload';
 import { FileType } from "@/utils/types";
 
+
+
+
 export default function ConverterPage() {
     const [selectedFormat, setSelectedFormat] = React.useState("");
     const [uploadedFile, setUploadedFile] = React.useState<File | null>(null);
@@ -16,9 +19,9 @@ export default function ConverterPage() {
     const [allowedFormats, setAllowedFormats] = React.useState<string[]>([]);
 
     const conversionMap: Record<string, string[]> = {
-        "json": ["geojson", "csv", "xml", "txt", "md"], 
-        "geojson": ["csv", "xml", "txt", "md"],  
-        "csv": ["json", "geojson", "xml", "txt", "md"],  
+        "json": ["geojson", "csv", "xml", "txt", "md"],
+        "geojson": ["csv", "xml", "txt", "md"],
+        "csv": ["json", "geojson", "xml", "txt", "md"],
         "xml": ["json", "geojson", "csv", "txt", "md"],
         "kml": ["json", "geojson", "csv", "txt", "md"],
         "gpx": ["json", "geojson", "csv", "txt", "md"],
@@ -26,7 +29,7 @@ export default function ConverterPage() {
         "txt": ["json", "geojson", "csv"],
         "md": ["json", "geojson", "csv"]
     };
-    
+
 
     const handleFileSelect = (fileObj: FileType) => {
         if (fileObj?.file instanceof File) {
@@ -47,27 +50,27 @@ export default function ConverterPage() {
 
     const handleFormatChange = (format: string) => {
         setSelectedFormat(format);
-        setErrorMessage(""); 
+        setErrorMessage("");
     };
 
     const convertFile = async () => {
         if (!uploadedFile) {
-            setErrorMessage("⚠️ Please upload a file before converting.");
+            setErrorMessage("Please upload a file before converting.");
             return;
         }
-        
+
         if (!selectedFormat) {
-            setErrorMessage("⚠️ Please choose an output format.");
+            setErrorMessage(" Please choose an output format.");
             return;
         }
-    
-        const newFileName = `${originalFileName}.${selectedFormat}`;
+
+
         let fileContent = "";
-    
+
         try {
             const fileText = await uploadedFile.text();
             const parsedContent = await parseFileContent(uploadedFile.name, fileText, uploadedFile);
-    
+
             if (selectedFormat === "json") {
                 fileContent = JSON.stringify(parsedContent, null, 2);
             } else if (selectedFormat === "geojson") {
@@ -79,27 +82,29 @@ export default function ConverterPage() {
             } else if (selectedFormat === "txt" || selectedFormat === "md") {
                 fileContent = Array.isArray(parsedContent) ? parsedContent.join("\n") : JSON.stringify(parsedContent, null, 2);
             } else {
-                setErrorMessage("⚠️ Unsupported file format.");
+                setErrorMessage(" Unsupported file format.");
                 return;
             }
         } catch (error) {
-            setErrorMessage("⚠️ Error processing file.");
+            console.error(error);
+            setErrorMessage("Error processing file.");
             return;
         }
-    
+
+
         const convertedBlob = new Blob([fileContent], { type: selectedFormat === "geojson" ? "application/geo+json" : "text/plain" });
         const fileURL = URL.createObjectURL(convertedBlob);
-    
+
         setConvertedFile(fileURL);
     };
-    
+
 
     const downloadFile = () => {
         if (!convertedFile || !selectedFormat) return;
-
+        const newFileName = `${originalFileName}.${selectedFormat}`;
         const link = document.createElement("a");
         link.href = convertedFile;
-        link.download = `${originalFileName}.${selectedFormat}`; 
+        link.download = newFileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -108,19 +113,20 @@ export default function ConverterPage() {
 
     const parseFileContent = async (fileName: string, fileText: string, file: File) => {
         const fileExtension = fileName.split('.').pop()?.toLowerCase();
-    
+
         switch (fileExtension) {
             case "json":
             case "geojson":
                 const parsedJSON = JSON.parse(fileText);
-                return parsedJSON.type === "FeatureCollection" ? parsedJSON.features.map((f: any) => f.properties) : parsedJSON;
+                return parsedJSON.type === "FeatureCollection" ? parsedJSON.features.map((f: GeoJSONFeature) =>
+                    f.properties) : parsedJSON;
             case "csv":
                 return parseCSV(fileText);
             case "xml":
             case "kml":
             case "gpx":
                 return parseXML(fileText);
-            case "tif":  
+            case "tif":
                 return await parseGeoTIFF(file);
             case "txt":
             case "md":
@@ -129,9 +135,10 @@ export default function ConverterPage() {
                 throw new Error("Unsupported file format.");
         }
     };
-    
 
-    const parseCSV = (text: string) => {
+    // -----------------------------------------------------------
+    // -------------------------  parse CSV ---------------------
+    const parseCSV = (text: string): Array<Record<string, string>> => {
         const [headerLine, ...lines] = text.split("\n").map(line => line.trim()).filter(line => line);
         const headers = headerLine.split(",");
         return lines.map(line => {
@@ -143,58 +150,66 @@ export default function ConverterPage() {
         });
     };
 
-    const convertToCSV = (data: any) => {
+    // ----------------------------------------------------------------
+    // -------------------------  Convert to  CSV ---------------------
+    const convertToCSV = (data: unknown): string => {
         if (!data || typeof data !== "object") {
             throw new Error("Invalid data for CSV conversion.");
         }
-    
-        let rows: any[] = [];
-    
-        if (data.type === "FeatureCollection" && Array.isArray(data.features)) {
-            rows = data.features.map((feature: any) => feature.properties);
+
+        let rows: Record<string, unknown>[] = [];
+
+        if ((data as { type: string; features: GeoJSONFeature[] }).type === "FeatureCollection" && Array.isArray((data as { type: string; features: GeoJSONFeature[] }).features)) {
+            rows = (data as { features: GeoJSONFeature[] }).features.map((feature: GeoJSONFeature) => feature.properties);
         } else if (Array.isArray(data)) {
             rows = data;
         } else {
             throw new Error("Unsupported data format for CSV conversion.");
         }
-    
+
         if (rows.length === 0) {
             throw new Error("No data available for CSV conversion.");
         }
-    
-        const headers = Object.keys(rows[0]); 
+
+        const headers = Object.keys(rows[0]);
         const csvContent = rows
             .map((row) => headers.map((header) => row[header] || "").join(","))
             .join("\n");
-    
+
         return `${headers.join(",")}\n${csvContent}`;
     };
 
-    const convertToGeoJSON = (data: any) => {
+    // -----------------------------------------------------------
+    // ------------- GeoJSON Feature interface --------------------
+    interface GeoJSONFeature {
+        properties: Record<string, unknown>;
+        geometry?: unknown;
+    }
+
+    const convertToGeoJSON = (data: GeoJSONFeature[]): string => {
         if (!Array.isArray(data)) {
             throw new Error("Invalid data format for GeoJSON conversion.");
         }
-    
         const geojson = {
             type: "FeatureCollection",
-            features: data.map((row: any) => ({
+            features: data.map((row) => ({
                 type: "Feature",
-                properties: row,
-                geometry: row.geometry || null  
+                properties: row.properties,
+                geometry: row.geometry || null
             }))
         };
-    
         return JSON.stringify(geojson, null, 2);
     };
-    
-    
+
+    // ----------------------------------------------------------------
+    // -------------------------  Parse GeoTIFF ---------------------
 
     const parseGeoTIFF = async (file: File) => {
         const arrayBuffer = await file.arrayBuffer();
         const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
         const image = await tiff.getImage();
         const rasterData = await image.readRasters();
-        
+
         return {
             width: image.getWidth(),
             height: image.getHeight(),
@@ -203,15 +218,19 @@ export default function ConverterPage() {
         };
     };
 
-    
+    // ----------------------------------------------------------------
+    // -------------------------  Parse XML ---------------------
     const parseXML = (text: string) => {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(text, "application/xml");
         return xmlToJson(xmlDoc);
     };
 
-    const xmlToJson = (xml: Node): any => {
-        const obj: any = {};
+    // ----------------------------------------------------------------
+    // -------------------------  xml To Json  ---------------------
+
+    const xmlToJson = (xml: Node): Record<string, unknown> => {
+        const obj: Record<string, unknown> = {};
 
         if (xml.nodeType === Node.ELEMENT_NODE) {
             const element = xml as Element;
@@ -220,7 +239,8 @@ export default function ConverterPage() {
                 for (let j = 0; j < element.attributes.length; j++) {
                     const attribute = element.attributes.item(j);
                     if (attribute) {
-                        obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
+                        const attr = attribute as Attr;
+                        (obj["@attributes"] as Record<string, string>)[attr.nodeName] = attr.nodeValue || "";
                     }
                 }
             }
@@ -232,7 +252,7 @@ export default function ConverterPage() {
             for (let i = 0; i < xml.childNodes.length; i++) {
                 const item = xml.childNodes.item(i);
                 if (!item) continue;
-                
+
                 const nodeName = item.nodeName;
                 if (!obj[nodeName]) {
                     obj[nodeName] = xmlToJson(item);
@@ -240,7 +260,7 @@ export default function ConverterPage() {
                     if (!Array.isArray(obj[nodeName])) {
                         obj[nodeName] = [obj[nodeName]];
                     }
-                    obj[nodeName].push(xmlToJson(item));
+                    (obj[nodeName] as unknown[]).push(xmlToJson(item));
                 }
             }
         }
@@ -248,17 +268,19 @@ export default function ConverterPage() {
         return obj;
     };
 
-    const convertToXML = (data: any) => {
-        const jsonToXml = (obj: any, rootName: string) => {
+    const convertToXML = (data: Record<string, unknown>) => {
+        const jsonToXml = (obj: Record<string, unknown> | unknown[], rootName: string) => {
             let xml = "";
             if (typeof obj === "object") {
-                for (let key in obj) {
-                    if (Array.isArray(obj[key])) {
-                        obj[key].forEach((subObj: any) => {
+                for (const key in obj) {
+                    if (Array.isArray((obj as Record<string, unknown>)[key])) {
+                        (obj as Record<string, unknown[]>)[key].forEach((value: unknown) => {
+                            const subObj = value as Record<string, unknown>;
                             xml += `<${key}>${jsonToXml(subObj, "")}</${key}>`;
                         });
                     } else {
-                        xml += `<${key}>${jsonToXml(obj[key], "")}</${key}>`;
+                        const value = (obj as Record<string, unknown>)[key];
+                        xml += `<${key}>${jsonToXml(value as Record<string, unknown> | unknown[], "")}</${key}>`;
                     }
                 }
             } else {
@@ -289,10 +311,10 @@ export default function ConverterPage() {
                         <SelectValue placeholder="Choose format" />
                     </SelectTrigger>
                     <SelectContent>
-                    <SelectGroup>
+                        <SelectGroup>
                             <SelectLabel>Available Formats</SelectLabel>
                             {fileFormats
-                                .filter((format) => allowedFormats.includes(format.value)) // ✅ ONLY show allowed formats
+                                .filter((format) => allowedFormats.includes(format.value)) // ONLY show allowed formats
                                 .map((format) => (
                                     <SelectItem key={format.value} value={format.value}>
                                         {format.label}
@@ -301,9 +323,9 @@ export default function ConverterPage() {
                         </SelectGroup>
                     </SelectContent>
                 </Select>
-                 {/* Show error message if no format is selected */}
-                    {errorMessage && (
-                        <p className="text-red-500 text-sm mt-2">{errorMessage}</p>
+                {/* Show error message if no format is selected */}
+                {errorMessage && (
+                    <p className="text-red-500 text-sm mt-2">{errorMessage}</p>
                 )}
 
                 {selectedFormat && (

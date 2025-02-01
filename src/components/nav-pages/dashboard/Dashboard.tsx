@@ -50,7 +50,7 @@ const DashboardMap: React.FC<MapProps> = () => {
             if (mergedBounds.isValid()) {
                 map.fitBounds(mergedBounds);
             }
-        }, [geoJSONDataList, map]);
+        }, [map]);
 
         return null;
     };
@@ -70,7 +70,7 @@ const DashboardMap: React.FC<MapProps> = () => {
     return (
         <div className="flex h-[calc(100vh-5rem)] overflow-hidden w-full">
             <div
-                className={`transition-all duration-300 flex flex-col border-r border-gray-200/[0.25] bg-white z-50 ${sidebarOpen ? "w-64" : "min-w-12"}`}
+                className={`transition-all duration-300 flex flex-col border-r border-gray-200/[0.25] z-50 ${sidebarOpen ? "w-64" : "min-w-12"}`}
             >
                 <IconButton onClick={() => setSidebarOpen(!sidebarOpen)} className="self-end m-2">
                     {sidebarOpen ? <PanelRightOpen /> : <PanelLeftOpen />}
