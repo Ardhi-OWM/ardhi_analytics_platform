@@ -14,7 +14,6 @@ import SubscriptionForm from "./SubscriptionForm";
 import FileUpload from "@/components/nav-pages/dashboard/FileUpload";
 
 
-
 interface SidebarItemsProps {
     geoJSONDataList: GeoJsonObject[];
     setGeoJSONDataList: React.Dispatch<React.SetStateAction<GeoJsonObject[]>>;
