@@ -253,7 +253,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                 <ul className="mt-2">
                     {geoJSONDataList.map((_, index) => (
                         <li key={index} className="flex justify-between items-center p-2 mb-2">
-                            <span className="text-sm">Dataset {index + 1}</span>
+                            <span className="text-sm ibm-plex-mono-medium-italic">Dataset {index + 1}</span>
                             <button
                                 className="bg-red-500  px-3  rounded hover:bg-red-600 text-sm"
                                 onClick={() => setGeoJSONDataList((prevData) => prevData.filter((_, i) => i !== index))}

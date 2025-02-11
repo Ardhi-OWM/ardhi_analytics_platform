@@ -8,7 +8,7 @@ import "leaflet/dist/leaflet.css";
 import * as L from 'leaflet';
 import { MapContainer, TileLayer, useMap, GeoJSON } from "react-leaflet";
 import { GeoJsonObject } from 'geojson';
-
+import Cluster from "react-leaflet-cluster";
 
 
 import { mapLayers } from "@/components/constants";
@@ -27,6 +27,7 @@ const DashboardMap: React.FC<MapProps> = () => {
     const [activeLayer, setActiveLayer] = useState(
         mapLayers.find(layer => layer.default)?.url || mapLayers[0].url
     );
+    const [selectedProperties, setSelectedProperties] = useState(null);
 
     // --------------- ----------------------------------------------------------------
     // --------------- Zoom to data bounds when data is loaded or changed-------------
@@ -65,7 +66,7 @@ const DashboardMap: React.FC<MapProps> = () => {
         });
     }, [geoJSONDataList]);
 
-  
+
 
     return (
         <div className="flex h-[calc(100vh-5rem)] overflow-hidden w-full">
@@ -95,16 +96,72 @@ const DashboardMap: React.FC<MapProps> = () => {
                     <SearchControl />
                     <TileLayer key={activeLayer} url={activeLayer} />
 
-                    {geoJSONDataList.map((geoJSONData, index) => (
-                        <GeoJSON key={index} data={geoJSONData} />
-                    ))}
+                    <Cluster zoomToBoundsOnClick={false}>
+                        {geoJSONDataList.map((geoJSONData, index) => (
+                            <GeoJSON
+                                key={index}
+                                data={geoJSONData}
+                                pointToLayer={(_feature, latlng) =>
+                                    L.marker(latlng, {
+                                        icon: L.divIcon({
+                                            className: "icon-cluster",
+                                            html: `<div style="
+                        background-color: #ccccff; 
+                        border: 1px solid #0000ff;
+                        border-radius: 50%; 
+                        width: 10px; 
+                        height: 10px;
+                        opacity: 0.8;
+                      "></div>`,
+                                            iconSize: [10, 10],
+                                            iconAnchor: [7, 7],
+                                        }),
+                                    })
+                                }
+                                onEachFeature={(feature, layer) => {
+                                    // Check if the feature has properties to display
+                                    if (feature.properties) {
+                                        // Generate HTML content for the tooltip by iterating over feature.properties.
+                                        const tooltipContent = Object.entries(feature.properties)
+                                            .map(
+                                                ([key, value]) =>
+                                                    `<div style="margin-bottom:4px;"><strong>${key}:</strong> ${value}</div>`
+                                            )
+                                            .join("");
+
+                                        // Bind the tooltip to the layer.
+                                        layer.bindTooltip(tooltipContent, {
+                                            direction: "top",
+                                            offset: [0, -10],
+                                            opacity: 0.9,
+                                            sticky: true,
+                                        });
+
+                                        // Optionally, open the tooltip on mouseover and close on mouseout.
+                                        layer.on("mouseover", () => {
+                                            layer.openTooltip();
+                                        });
+                                        layer.on("mouseout", () => {
+                                            layer.closeTooltip();
+                                        });
+
+                                        layer.on("click", () => {
+                                            setSelectedProperties(feature.properties);
+                                        });
+                                    }
+                                }}
+                            />
+                        ))}
+                    </Cluster>
+
+
                     <MapBounds />
 
                     {/* Layer Selector Dropdown - Ensure it's inside the map */}
                     <div className="absolute bottom-2 left-2 z-[1001]">
                         <DropdownMenu onOpenChange={(open) => setIsOpen(open)}>
                             <DropdownMenuTrigger asChild>
-                                <span className="flex items-center px-6 py-3 border border-purple-300 rounded-md cursor-pointer shadow-lg bg-background text-base min-w-40">
+                                <span className="flex items-center px-6 py-1 border border-purple-300 rounded-md cursor-pointer shadow-lg bg-background text-base min-w-40">
                                     {mapLayers.find((layer) => layer.url === activeLayer)?.name || "Select Map Layer"}
                                     <span className="ml-2">
                                         {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -130,6 +187,24 @@ const DashboardMap: React.FC<MapProps> = () => {
                         </DropdownMenu>
                     </div>
                 </MapContainer>
+
+                {selectedProperties && (
+                    <div className="absolute top-0 right-0 m-4 p-4 bg-white dark:bg-gray-950 shadow-lg border rounded z-[1001]">
+
+                        <h3 className="text-base font-bold underline underline-offset-1 ">Feature Details</h3>
+                        <ul>
+                            {Object.entries(selectedProperties).map(([key, value]) => (
+                                <li className="text-sm" key={key}>
+                                    <strong>{key}:</strong> {String(value)}
+                                </li>
+                            ))}
+                        </ul>
+                        <button className="text-sm  border bg-blue-700 px-3 rounded" onClick={() => setSelectedProperties(null)}>
+                            Close
+                        </button>
+                    </div>
+                )}
+
             </div>
         </div>
     );

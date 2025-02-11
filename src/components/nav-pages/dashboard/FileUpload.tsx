@@ -20,7 +20,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     <div className="flex flex-col items-center justify-center">
       <div
         {...getRootProps()}
-        className="border-2 border-dashed border-blue-500 text-center my-3 w-full max-w-lg h-35 p-4 
+        className="border border-dashed border-blue-500 text-center my-3 w-full max-w-lg h-35 p-4 
         flex items-center justify-center bg-gray-200/[0.25] hover:bg-gray-300 transition-all duration-300 rounded-lg"
       >
         <input {...getInputProps()} />
