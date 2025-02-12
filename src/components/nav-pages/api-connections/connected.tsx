@@ -18,20 +18,26 @@ interface Service {
 }
 
 const ConnectedApiEndpoints = () => {
-    const { user } = useUser(); // Fetching Clerk authenticated user
+    const { user } = useUser(); 
     const [services, setServices] = useState<Service[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (!user) return;
-
-        // Fetch data from local storage or external API (if needed)
+    
         const storedServices = localStorage.getItem("services");
         if (storedServices) {
-            setServices(JSON.parse(storedServices));
+            const parsedServices = JSON.parse(storedServices).map((service: any) => ({
+                ...service,
+                apiUrl: service.api_url, 
+            }));
+    
+            console.log("Mapped Services:", parsedServices); 
+            setServices(parsedServices);
         }
     }, [user]);
+    
 
     // ---------- Add a New Service Linked to the User ----------
     const addService = async (newService: Service) => {
