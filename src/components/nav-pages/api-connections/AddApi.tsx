@@ -1,8 +1,11 @@
 "use client";
 import { useState } from 'react';
+import { useUser } from "@clerk/nextjs";  
+import apiClient from "@/lib/apiClient"; 
 
 interface Service {
     id?: number;
+    user_id?: string;
     name: string;
     provider: string;
     type: string;
@@ -15,6 +18,7 @@ const AddApi = ({ onClose, onServiceAdded }: {
     onClose: () => void;
     onServiceAdded: (service: Service) => void
 }) => {
+    const { user } = useUser(); // Get user details
     const [apiUrl, setApiUrl] = useState('');
     const [newService, setNewService] = useState<Service>({
         name: '',
@@ -25,7 +29,7 @@ const AddApi = ({ onClose, onServiceAdded }: {
     });
     const [loading, setLoading] = useState(false);
 
-    //  ----------Parse the API URL and extract name, provider, and region----------
+    //  ---------- Parse API URL and Extract Name, Provider, and Region ----------
     const parseApiUrl = (url: string) => {
         try {
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -36,16 +40,16 @@ const AddApi = ({ onClose, onServiceAdded }: {
             const hostname = urlObj.hostname;
 
             // Extract the name from the subdomain
-            const name = hostname.split('.')[0]; // First part of the subdomain
+            const name = hostname.split('.')[0];
 
             // Extract the provider
             const provider =
                 hostname.includes('amazonaws') ? 'AWS' :
-                    hostname.includes('core.windows') ? 'Azure' :
-                        hostname.includes('cloud-object-storage') ? 'IBM Cloud' :
-                            hostname.includes('googleapis') ? 'Google Cloud' :
-                                hostname.includes('digitaloceanspaces') ? 'DigitalOcean' :
-                                    'Unknown';
+                hostname.includes('core.windows') ? 'Azure' :
+                hostname.includes('cloud-object-storage') ? 'IBM Cloud' :
+                hostname.includes('googleapis') ? 'Google Cloud' :
+                hostname.includes('digitaloceanspaces') ? 'DigitalOcean' :
+                'Unknown';
 
             // Extract the region
             const parts = hostname.split('.');
@@ -59,15 +63,20 @@ const AddApi = ({ onClose, onServiceAdded }: {
                 apiUrl: url,
                 provider,
                 region,
-                name, // Set the extracted name
+                name,
             });
         } catch (error) {
             console.error('Invalid URL format', error);
         }
     };
 
-    //  -------------- Save Service Locally Instead of Supabase -------------
+    //  -------------- Save Service to Backend and Local Storage -------------
     const insertService = async () => {
+        if (!user) {
+            alert("You need to be logged in to add an API.");
+            return;
+        }
+
         setLoading(true);
         try {
             // Fetch existing services from localStorage
@@ -81,20 +90,43 @@ const AddApi = ({ onClose, onServiceAdded }: {
                 return;
             }
 
-            // Add new service
-            const updatedServices = [...existingServices, newService];
+            // Prepare backend request payload
+            const payload = {
+                user_id: user.id, // Send user ID
+                name: newService.name,
+                provider: newService.provider,
+                region: newService.region,
+                api_url: newService.apiUrl,
+            };
+
+            // Send API request to backend
+            const response = await apiClient.post("/api-endpoints/", payload);
+            const savedService = response.data as Service;
+
+
+            // Add new service to local storage
+            const updatedServices = [...existingServices, savedService];
             localStorage.setItem("services", JSON.stringify(updatedServices));
 
             alert('Service added successfully!');
-            onServiceAdded(newService);
+            onServiceAdded(savedService);
 
             // Reset fields
             setNewService({ name: '', provider: '', type: '', region: '', apiUrl: '' });
             setApiUrl('');
             onClose();
-        } catch (error) {
+      
+        } catch (error: unknown) {
             console.error('Unexpected error:', error);
+
+            if (error instanceof Error && error.message) {
+                alert(error.message);
+            } else {
+                alert("Failed to add service. Please try again.");
+            }
         }
+        
+
         setLoading(false);
     };
 
