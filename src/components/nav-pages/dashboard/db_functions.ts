@@ -54,7 +54,7 @@ const SearchControl: React.FC = () => {
             }
         });
 
-        const searchControl = new CustomSearchControl({ position: "topright" });
+        const searchControl = new CustomSearchControl( { position: "topleft" } );
         searchControl.addTo(map);
 
         searchInput.addEventListener("keydown", async (event) => {

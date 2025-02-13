@@ -6,7 +6,7 @@ const isProtectedRoute = createRouteMatcher([
     "/dashboard/:path*",   // Matches /dashboard
     '/converter',           // Matches /converter
     '/api-connections',     // Matches /api-connections
-    '/maptry',     // Matches /api-connections
+    '/geotools',     // Matches /geo-tools
     '/',
 ]);
 
@@ -31,6 +31,7 @@ export const config = {
         "/dashboard/:path*", // Protect dashboard route and sub-routes
         '/converter',           // Matches /converter
         '/api-connections',     // Matches /api-connections
+        '/geotools',     // Matches /geo-tools
         // Ensure auth routes are excluded
         '/((?!signin|signup).*)', // Exclude /signin, /signup, and /signout
         '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',

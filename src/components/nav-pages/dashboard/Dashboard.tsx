@@ -45,35 +45,6 @@ const DashboardMap: React.FC<MapProps> = () => {
     const [selectedProperties, setSelectedProperties] = useState<Record<string, string | number | boolean> | null>(null);
 
 
-    // --------------- ----------------------------------------------------------------
-    // --------------- Zoom to data bounds when data is loaded or changed-------------
-
-    /* const MapBounds: React.FC<{ geoJSONDataList?: GeoJsonObject[] }> = ({ geoJSONDataList = [] }) => {
-
-        const map = useMap();
-
-        useEffect(() => {
-            if (!Array.isArray(geoJSONDataList) || geoJSONDataList.length === 0 || !map) return;
-
-            const allBounds = geoJSONDataList
-                .map((geoJSON) => {
-                    const layer = L.geoJSON(geoJSON as GeoJsonObject);
-                    return layer.getBounds();
-                })
-                .filter((bounds) => bounds.isValid());
-
-            if (allBounds.length === 0) return;
-
-            const mergedBounds = allBounds.reduce((acc, bounds) => acc.extend(bounds), allBounds[0]);
-
-            if (mergedBounds.isValid()) {
-                map.fitBounds(mergedBounds);
-            }
-        }, [geoJSONDataList, map]); // Ensure we track geoJSONDataList changes
-
-        return null;
-    };
- */
 
     // --------------- ----------------------------------------------------------------
     // --------------- Change data to Leaflet CRS-------------
@@ -168,8 +139,6 @@ const DashboardMap: React.FC<MapProps> = () => {
                     </Cluster>
 
 
-
-
                     {/* Layer Selector Dropdown - Ensure it's inside the map */}
                     <div className="absolute bottom-2 left-2 z-[1001]">
                         <DropdownMenu onOpenChange={(open) => setIsOpen(open)}>
@@ -202,7 +171,7 @@ const DashboardMap: React.FC<MapProps> = () => {
                 </MapContainer>
 
                 {selectedProperties && (
-                    <div className="absolute top-0 right-0 m-4 p-4 bg-white dark:bg-gray-950 shadow-lg border 
+                    <div className="absolute top-0 right-0 m-4 p-4 bg-white dark:bg-[hsl(279,100%,3.9%)] shadow-lg border 
                     rounded z-[1001] max-h-[calc(100vh-5rem)] overflow-y-auto">
 
                         <h3 className="text-base font-bold underline underline-offset-1 ">Feature Details</h3>
