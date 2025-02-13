@@ -1,21 +1,36 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { PanelLeftOpen, PanelRightOpen, ChevronDown, ChevronUp } from "lucide-react";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
 import "leaflet/dist/leaflet.css";
 import * as L from 'leaflet';
-import { MapContainer, TileLayer, useMap, GeoJSON } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { GeoJsonObject } from 'geojson';
 import Cluster from "react-leaflet-cluster";
 
 
 import { mapLayers } from "@/components/constants";
 import SidebarItems from "@/components/nav-pages/dashboard/SidebarItems";
-import SearchControl from "@/components/nav-pages/dashboard/db_functions";
+//import SearchControl from "@/components/nav-pages/dashboard/db_functions";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
+const SearchControl = dynamic(
+    () => import("@/components/nav-pages/dashboard/db_functions"),
+    { ssr: false }
+)
+
+const MapBounds = dynamic(
+    () => import("@/components/nav-pages/dashboard/MapBounds"),
+    { ssr: false }
+)
+
+
+
+// --------------- ----------------------------------------------------------------
+// ------------------------- Code ------------------------------------------------------
 interface MapProps {
     geoJSONDataList?: GeoJsonObject[];
 }
@@ -27,15 +42,18 @@ const DashboardMap: React.FC<MapProps> = () => {
     const [activeLayer, setActiveLayer] = useState(
         mapLayers.find(layer => layer.default)?.url || mapLayers[0].url
     );
-    const [selectedProperties, setSelectedProperties] = useState(null);
+    const [selectedProperties, setSelectedProperties] = useState<Record<string, string | number | boolean> | null>(null);
+
 
     // --------------- ----------------------------------------------------------------
     // --------------- Zoom to data bounds when data is loaded or changed-------------
-    const MapBounds: React.FC = () => {
+
+    /* const MapBounds: React.FC<{ geoJSONDataList?: GeoJsonObject[] }> = ({ geoJSONDataList = [] }) => {
+
         const map = useMap();
 
         useEffect(() => {
-            if (!geoJSONDataList.length || !map) return;
+            if (!Array.isArray(geoJSONDataList) || geoJSONDataList.length === 0 || !map) return;
 
             const allBounds = geoJSONDataList
                 .map((geoJSON) => {
@@ -51,10 +69,11 @@ const DashboardMap: React.FC<MapProps> = () => {
             if (mergedBounds.isValid()) {
                 map.fitBounds(mergedBounds);
             }
-        }, [map]);
+        }, [geoJSONDataList, map]); // Ensure we track geoJSONDataList changes
 
         return null;
     };
+ */
 
     // --------------- ----------------------------------------------------------------
     // --------------- Change data to Leaflet CRS-------------
@@ -85,6 +104,7 @@ const DashboardMap: React.FC<MapProps> = () => {
             </div>
 
             {/* Map Area */}
+
             <div className="relative flex-grow h-full">
                 <MapContainer
                     center={[52.520008, 13.404954]}
@@ -93,6 +113,7 @@ const DashboardMap: React.FC<MapProps> = () => {
                     style={{ width: "100%", height: "100%" }}
                     className="w-full h-full"
                 >
+                    <MapBounds geoJSONDataList={geoJSONDataList} />
                     <SearchControl />
                     <TileLayer key={activeLayer} url={activeLayer} />
 
@@ -119,49 +140,41 @@ const DashboardMap: React.FC<MapProps> = () => {
                                     })
                                 }
                                 onEachFeature={(feature, layer) => {
-                                    // Check if the feature has properties to display
-                                    if (feature.properties) {
-                                        // Generate HTML content for the tooltip by iterating over feature.properties.
-                                        const tooltipContent = Object.entries(feature.properties)
-                                            .map(
-                                                ([key, value]) =>
-                                                    `<div style="margin-bottom:4px;"><strong>${key}:</strong> ${value}</div>`
-                                            )
-                                            .join("");
+                                    if (!feature || !feature.properties) return; // Prevents crashing if feature is undefined
 
-                                        // Bind the tooltip to the layer.
-                                        layer.bindTooltip(tooltipContent, {
-                                            direction: "top",
-                                            offset: [0, -10],
-                                            opacity: 0.9,
-                                            sticky: true,
-                                        });
+                                    // Generate HTML content for the tooltip
+                                    const tooltipContent = Object.entries(feature.properties)
+                                        .map(([key, value]) => `<div style="margin-bottom:4px;"><strong>${key}:</strong> ${value}</div>`)
+                                        .join("");
 
-                                        // Optionally, open the tooltip on mouseover and close on mouseout.
-                                        layer.on("mouseover", () => {
-                                            layer.openTooltip();
-                                        });
-                                        layer.on("mouseout", () => {
-                                            layer.closeTooltip();
-                                        });
+                                    layer.bindTooltip(tooltipContent, {
+                                        direction: "top",
+                                        offset: [0, -10],
+                                        opacity: 0.9,
+                                        sticky: true,
+                                    });
 
-                                        layer.on("click", () => {
-                                            setSelectedProperties(feature.properties);
-                                        });
-                                    }
+                                    // Open tooltip on hover
+                                    layer.on("mouseover", () => layer.openTooltip());
+                                    layer.on("mouseout", () => layer.closeTooltip());
+
+                                    layer.on("click", () => {
+                                        setSelectedProperties(feature.properties);
+                                    });
                                 }}
+
                             />
                         ))}
                     </Cluster>
 
 
-                    <MapBounds />
+
 
                     {/* Layer Selector Dropdown - Ensure it's inside the map */}
                     <div className="absolute bottom-2 left-2 z-[1001]">
                         <DropdownMenu onOpenChange={(open) => setIsOpen(open)}>
                             <DropdownMenuTrigger asChild>
-                                <span className="flex items-center px-6 py-1 border border-purple-300 rounded-md cursor-pointer shadow-lg bg-background text-base min-w-40">
+                                <span className="flex items-center px-6 py-1 border border-purple-300 rounded-md cursor-pointer shadow-lg bg-background text-sm min-w-40">
                                     {mapLayers.find((layer) => layer.url === activeLayer)?.name || "Select Map Layer"}
                                     <span className="ml-2">
                                         {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -189,7 +202,8 @@ const DashboardMap: React.FC<MapProps> = () => {
                 </MapContainer>
 
                 {selectedProperties && (
-                    <div className="absolute top-0 right-0 m-4 p-4 bg-white dark:bg-gray-950 shadow-lg border rounded z-[1001]">
+                    <div className="absolute top-0 right-0 m-4 p-4 bg-white dark:bg-gray-950 shadow-lg border 
+                    rounded z-[1001] max-h-[calc(100vh-5rem)] overflow-y-auto">
 
                         <h3 className="text-base font-bold underline underline-offset-1 ">Feature Details</h3>
                         <ul>
