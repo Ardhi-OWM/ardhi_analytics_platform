@@ -7,11 +7,14 @@ import apiClient from "@/lib/apiClient"; // Centralized Axios instance
 import { GeoJsonObject, FeatureCollection } from "geojson";
 import proj4 from "proj4";
 import { toWgs84 } from "@turf/projection";
+/* import shp from "shpjs"; // For converting shapefiles
+import { kml as kmlToGeoJSON } from "@tmcw/togeojson"; // For converting KML files to GeoJSON */
 
 // In directory components
 import { Input } from "@/components/ui/input";
 import SubscriptionForm from "./SubscriptionForm";
 import FileUpload from "@/components/nav-pages/dashboard/FileUpload";
+
 
 
 interface SidebarItemsProps {
@@ -172,7 +175,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             {/* Input type selection */}
             <div className="space-y-4">
                 <label htmlFor="input-type" className="text-sm font-medium flex flex-row space-x-2">
-                    <MousePointerClick className="text-green-300 ml-2 rotate-90" />
+                    <MousePointerClick className="text-green-500 ml-2 rotate-90" />
                     <p className=" uppercase font-bold">Select Input Type</p>
                 </label>
                 <select
