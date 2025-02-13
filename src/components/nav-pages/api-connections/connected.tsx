@@ -28,10 +28,19 @@ const ConnectedApiEndpoints = () => {
     
         const storedServices = localStorage.getItem("services");
         if (storedServices) {
-            const parsedServices = JSON.parse(storedServices).map((service: any) => ({
-                ...service,
-                apiUrl: service.api_url, 
-            }));
+            // const parsedServices = JSON.parse(storedServices).map((service: any) => ({
+            //     ...service,
+            //     apiUrl: service.api_url, 
+            // }));
+            const parsedServices = JSON.parse(storedServices).map((service: unknown) => {
+                if (typeof service === "object" && service !== null && "api_url" in service) {
+                    return {
+                        ...service,
+                        apiUrl: (service as { api_url: string }).api_url, 
+                    };
+                }
+                return service;
+            });            
     
             console.log("Mapped Services:", parsedServices); 
             setServices(parsedServices);

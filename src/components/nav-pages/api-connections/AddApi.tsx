@@ -1,7 +1,7 @@
 "use client";
 import { useState } from 'react';
-import { useUser } from "@clerk/nextjs";  // Clerk authentication
-import apiClient from "@/lib/apiClient"; // Centralized Axios instance
+import { useUser } from "@clerk/nextjs";  
+import apiClient from "@/lib/apiClient"; 
 
 interface Service {
     id?: number;
@@ -115,14 +115,18 @@ const AddApi = ({ onClose, onServiceAdded }: {
             setNewService({ name: '', provider: '', type: '', region: '', apiUrl: '' });
             setApiUrl('');
             onClose();
-        } catch (error: any) {
+      
+        } catch (error: unknown) {
             console.error('Unexpected error:', error);
-            if (error.response && error.response.data.error) {
-                alert(error.response.data.error); // Show backend error
+
+            if (error instanceof Error && error.message) {
+                alert(error.message);
             } else {
                 alert("Failed to add service. Please try again.");
             }
         }
+        
+
         setLoading(false);
     };
 

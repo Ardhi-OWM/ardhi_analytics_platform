@@ -28,14 +28,16 @@ const SubscriptionForm: React.FC = () => {
             const response = await apiClient.post("/subscriptions/", payload);
             console.log("Response:", response.data);
             setMessage("Thank you for subscribing!");
-        } catch (err: any) {
-            console.error("Error subscribing:", err);
-            if (err.response && err.response.data && err.response.data.error) {
-                setMessage(err.response.data.error); 
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error("Error subscribing:", err);
+                setMessage(err.message);
             } else {
+                console.error("Unknown error:", err);
                 setMessage("This email is already subscribed.");
             }
-        } finally {
+        }
+        finally {
             setLoading(false);
             setEmail("");
         }
