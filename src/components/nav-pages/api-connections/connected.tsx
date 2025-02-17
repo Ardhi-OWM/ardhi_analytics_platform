@@ -5,6 +5,7 @@ import { useUser } from '@clerk/nextjs'; // Clerk authentication hook
 import AddApi from './AddApi';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import ButtonMine from "@/components/reusable/button-mine";
+import apiClient from '@/lib/apiClient';
 
 interface Service {
     id?: number;
@@ -28,10 +29,6 @@ const ConnectedApiEndpoints = () => {
     
         const storedServices = localStorage.getItem("services");
         if (storedServices) {
-            // const parsedServices = JSON.parse(storedServices).map((service: any) => ({
-            //     ...service,
-            //     apiUrl: service.api_url, 
-            // }));
             const parsedServices = JSON.parse(storedServices).map((service: unknown) => {
                 if (typeof service === "object" && service !== null && "api_url" in service) {
                     return {
@@ -67,20 +64,33 @@ const ConnectedApiEndpoints = () => {
     };
 
     // ------------- Delete Service from Local State -----------
-    const deleteService = async (id: number) => {
+    const deleteService = async (apiUrl: string) => {
         if (!confirm("Are you sure you want to delete this service?")) return;
         if (!user) return;
-
+    
         try {
-            const updatedServices = services.filter((service) => service.id !== id);
-            setServices(updatedServices);
-            localStorage.setItem("services", JSON.stringify(updatedServices));
-
-            alert("Service deleted successfully!");
+            const response = await apiClient.request({
+                url: '/api-endpoints/delete_by_api_url/',
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                data: { api_url: apiUrl }
+            });
+    
+            if (response.status === 204) {
+                const updatedServices = services.filter((service) => service.apiUrl !== apiUrl);
+                setServices(updatedServices);
+                localStorage.setItem("services", JSON.stringify(updatedServices));
+    
+                alert("Service deleted successfully!");
+            } else {
+                alert("Failed to delete service from backend.");
+            }
         } catch (error) {
             console.error("Error deleting service:", error);
+            alert("Failed to delete service. Please try again.");
         }
     };
+    
 
     // ------------- Date formatting  -----------
     const formatDate = (dateString?: string) => {
@@ -142,12 +152,14 @@ const ConnectedApiEndpoints = () => {
                             <TableCell className="text-sm">{formatDate(service.created_at)}</TableCell>
                             <TableCell>
                                 <button
-                                    onClick={() => deleteService(service.id!)}
+                                    onClick={() => deleteService(String(service.apiUrl))}
                                     className="bg-red-400 px-4 py-1 rounded hover:bg-red-600 text-sm"
                                 >
                                     Delete
                                 </button>
                             </TableCell>
+
+
                         </TableRow>
                     ))}
                 </TableBody>
