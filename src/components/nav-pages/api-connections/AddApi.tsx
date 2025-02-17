@@ -1,7 +1,7 @@
 "use client";
 import { useState } from 'react';
-import { useUser } from "@clerk/nextjs";  
-import apiClient from "@/lib/apiClient"; 
+import { useUser } from "@clerk/nextjs";
+import apiClient from "@/lib/apiClient";
 
 interface Service {
     user_id?: string;
@@ -40,10 +40,10 @@ const AddApi = ({ onClose, onServiceAdded }: {
             const name = hostname.split('.')[0];
             const provider =
                 hostname.includes('amazonaws') ? 'AWS' :
-                hostname.includes('core.windows') ? 'Azure' :
-                hostname.includes('googleapis') ? 'Google Cloud' :
-                hostname.includes('digitaloceanspaces') ? 'DigitalOcean' :
-                'Unknown';
+                    hostname.includes('core.windows') ? 'Azure' :
+                        hostname.includes('googleapis') ? 'Google Cloud' :
+                            hostname.includes('digitaloceanspaces') ? 'DigitalOcean' :
+                                'Unknown';
 
             const regionMatch = hostname.match(/[a-z]{2,3}-[a-z]+-\d/);
             const region = regionMatch?.[0] || 'Unknown';
@@ -56,6 +56,7 @@ const AddApi = ({ onClose, onServiceAdded }: {
                 apiUrl: url,
             });
         } catch (error) {
+            console.error('Error parsing URL:', error);
             showNotification('error', 'Invalid URL format. Please enter a valid URL.');
         }
     };
@@ -69,7 +70,7 @@ const AddApi = ({ onClose, onServiceAdded }: {
             showNotification('error', 'Please enter a valid API URL.');
             return;
         }
-    
+
         setLoading(true);
         try {
             const payload = {
@@ -80,25 +81,43 @@ const AddApi = ({ onClose, onServiceAdded }: {
                 api_url: newService.apiUrl,
                 type: newService.type,
             };
-    
+
             const response = await apiClient.post("/api-endpoints/", payload);
             const savedService = response.data as Service;
-    
+
             showNotification('success', 'Service added successfully!');
             onServiceAdded(savedService);
             setNewService({ name: '', provider: '', type: 'API', region: '', apiUrl: '' });
             setApiUrl('');
             onClose();
-    
-        } catch (error: any) {
+
+        } catch (error: unknown) {
+            console.error('Error adding service:', error);
+
+            let errorMessage = 'Failed to add service. Please try again.';
+
+            if (error instanceof Error) {
+                // If it's a standard JS error
+                errorMessage = error.message;
+            } else if (typeof error === 'object' && error !== null && 'response' in error) {
+                // If it's an Axios error with a response object
+                const axiosError = error as { response?: { data?: { detail?: string; error?: string } } };
+                errorMessage = axiosError.response?.data?.detail || axiosError.response?.data?.error || errorMessage;
+            }
+
+            showNotification('error', errorMessage);
+        }
+
+
+        /* catch (error: any) {
             console.error('Error adding service:', error);
             const errorMessage = error.response?.data?.detail || error.response?.data?.error || 'Failed to add service. Please try again.';
             showNotification('error', errorMessage);
         }
-    
+     */
         setLoading(false);
     };
-    
+
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
