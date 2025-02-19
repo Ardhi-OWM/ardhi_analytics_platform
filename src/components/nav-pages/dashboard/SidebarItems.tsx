@@ -45,33 +45,26 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             alert("You need to be logged in to add a service");
             return;
         }
-
-
-        // Capitalize input_type to match database constraint
+    
         const formattedInputType =
-            inputType === "api"
-                ? "API"
-                : inputType === "ml-model"
-                    ? "Link to Model"
-                    : "Link to Dataset";
+            // inputType === "api" ? "API" : inputType === "ml-model" ? "Link to Model" : "Link to Dataset";
+            inputType === "api" ? "API" : inputType === "ml-model" ? "Model" : "Dataset";
 
+    
         const payload = {
             user_id: user.id,
             input_type: formattedInputType,
             data_link: inputValue,
         };
-
+    
         console.log("Submitting payload:", payload);
-
+    
         try {
             setIsSubmitting(true);
-
-            // API call to Django backend
             const response = await apiClient.post("/inputs/", payload);
-
             console.log("Response:", response.data);
             alert("Service added successfully!");
-            setInputValue(""); // Clear input field
+            setInputValue("");
         } catch (err) {
             console.error("Error adding service:", err);
             alert("Failed to add service. Please try again.");
