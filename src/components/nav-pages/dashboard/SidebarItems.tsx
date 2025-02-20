@@ -7,28 +7,25 @@ import apiClient from "@/lib/apiClient"; // Centralized Axios instance
 import { GeoJsonObject, FeatureCollection } from "geojson";
 import proj4 from "proj4";
 import { toWgs84 } from "@turf/projection";
-/* import shp from "shpjs"; // For converting shapefiles
-import { kml as kmlToGeoJSON } from "@tmcw/togeojson"; // For converting KML files to GeoJSON */
+import { kml as kmlToGeoJSON } from "@tmcw/togeojson";
+import shp from "shpjs";
 
 // In directory components
 import { Input } from "@/components/ui/input";
 import SubscriptionForm from "./SubscriptionForm";
 import FileUpload from "@/components/nav-pages/dashboard/FileUpload";
 
-
-
 interface SidebarItemsProps {
     geoJSONDataList: GeoJsonObject[];
     setGeoJSONDataList: React.Dispatch<React.SetStateAction<GeoJsonObject[]>>;
+    fetchModels: () => Promise<void>; // Ensure fetchModels is properly used
 }
 
-
-const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSONDataList }) => {
-
+const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSONDataList, fetchModels }) => {
     const [inputType, setInputType] = useState<"api" | "ml-model" | "dataset">("api");
     const [inputValue, setInputValue] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [dataUrl, setDataUrl] = useState("");
+    const [dataUrl, setDataUrl] = useState(""); // ✅ Handles URL input
     const { user } = useUser();
 
     // Handle input type change
@@ -45,33 +42,40 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             alert("You need to be logged in to add a service");
             return;
         }
-    
-        const formattedInputType =
-            // inputType === "api" ? "API" : inputType === "ml-model" ? "Link to Model" : "Link to Dataset";
-            inputType === "api" ? "API" : inputType === "ml-model" ? "Model" : "Dataset";
 
-    
+        const formattedInputType = inputType === "api" ? "API" : inputType === "ml-model" ? "Model" : "Dataset";
+
         const payload = {
             user_id: user.id,
             input_type: formattedInputType,
             data_link: inputValue,
         };
-    
-        console.log("Submitting payload:", payload);
-    
+
+        console.log("🔹 Payload Sent:", payload);
+
         try {
             setIsSubmitting(true);
             const response = await apiClient.post("/inputs/", payload);
-            console.log("Response:", response.data);
+            console.log("✅ Response:", response.data);
             alert("Service added successfully!");
             setInputValue("");
-        } catch (err) {
-            console.error("Error adding service:", err);
-            alert("Failed to add service. Please try again.");
+
+            // ✅ Call fetchModels to refresh the list
+            await fetchModels();
+        } catch (error: any) {
+            console.error("❌ Error adding service:", error);
+
+            if (error.response) {
+                console.log("🚨 Response Data:", error.response.data);
+                alert(`Failed to add service: ${JSON.stringify(error.response.data)}`);
+            } else {
+                alert("Failed to add service. Please try again.");
+            }
         } finally {
             setIsSubmitting(false);
         }
     };
+    
 
     // Generate dynamic labels and placeholders based on input type
     const getLabelAndPlaceholder = (type: string) => {
@@ -135,20 +139,14 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                 ["EPSG:3857", "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"],
             ]);
 
-            // Define source CRS in Proj4
-            if (!proj4.defs(sourceCrs)) {
-                console.warn(`Unknown CRS: ${sourceCrs}. Attempting transformation to EPSG:4326`);
-            }
-
             return toWgs84(geoJSON, { mutate: true });
         } catch (error) {
             console.error("Error transforming CRS:", error);
-            return geoJSON; // Return original data if conversion fails
+            return geoJSON;
         }
     };
-    // ------------------  ----------------------------- -----------------
-    // -------------------------- Handle URL Load ------------------------
 
+    // ------------------ Handle URL Load ------------------------
     const handleUrlLoad = async () => {
         try {
             const response = await fetch(dataUrl);
@@ -169,11 +167,10 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             <div className="space-y-4">
                 <label htmlFor="input-type" className="text-sm font-medium flex flex-row space-x-2">
                     <MousePointerClick className="text-green-500 ml-2 rotate-90" />
-                    <p className=" uppercase font-bold">Select Input Type</p>
+                    <p className="uppercase font-bold">Select Input Type</p>
                 </label>
                 <select
                     id="input-type"
-                    aria-label="Input type selector"
                     className="block w-full px-2 border border-purple-400/[.25] rounded bg-background focus:border-purple-500 text-sm"
                     value={inputType}
                     onChange={handleTypeChange}
@@ -182,7 +179,6 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                     <option value="ml-model">Link to Model</option>
                     <option value="dataset">Link to Dataset</option>
                 </select>
-
                 {/* Dynamic input field */}
                 <div>
                     <label htmlFor="dynamic-input" className="block text-xs font-medium">
@@ -270,4 +266,3 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
 };
 
 export default SidebarItems;
-

@@ -10,27 +10,15 @@ import * as L from 'leaflet';
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { GeoJsonObject } from 'geojson';
 import Cluster from "react-leaflet-cluster";
-
+import apiClient from "@/lib/apiClient"; // ✅ Import API Client
 
 import { mapLayers } from "@/components/constants";
 import SidebarItems from "@/components/nav-pages/dashboard/SidebarItems";
-//import SearchControl from "@/components/nav-pages/dashboard/db_functions";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
-const SearchControl = dynamic(
-    () => import("@/components/nav-pages/dashboard/db_functions"),
-    { ssr: false }
-)
+const SearchControl = dynamic(() => import("@/components/nav-pages/dashboard/db_functions"), { ssr: false });
+const MapBounds = dynamic(() => import("@/components/nav-pages/dashboard/MapBounds"), { ssr: false });
 
-const MapBounds = dynamic(
-    () => import("@/components/nav-pages/dashboard/MapBounds"),
-    { ssr: false }
-)
-
-
-
-// --------------- ----------------------------------------------------------------
-// ------------------------- Code ------------------------------------------------------
 interface MapProps {
     geoJSONDataList?: GeoJsonObject[];
 }
@@ -39,51 +27,76 @@ const DashboardMap: React.FC<MapProps> = () => {
     const [geoJSONDataList, setGeoJSONDataList] = useState<GeoJsonObject[]>([]);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
-    const [activeLayer, setActiveLayer] = useState(
-        mapLayers.find(layer => layer.default)?.url || mapLayers[0].url
-    );
+    const [activeLayer, setActiveLayer] = useState(mapLayers.find(layer => layer.default)?.url || mapLayers[0].url);
     const [selectedProperties, setSelectedProperties] = useState<Record<string, string | number | boolean> | null>(null);
 
+    interface ModelInput {
+        id: number;
+        user_id: string;
+        input_type: string;
+        file_type: string;
+        data_link: string;
+        created_at: string;
+    }
+    
+    const fetchModels = async () => {
+        try {
+            const response = await apiClient.get<ModelInput[]>("/inputs/");
+            console.log("✅ Fetched Models:", response.data);
+    
+            // ✅ Fetch GeoJSON data from `data_link` for each valid model
+            const geoJSONModels = await Promise.all(
+                response.data
+                    .filter((model) => model.file_type === "json" || model.file_type === "geojson")
+                    .map(async (model) => {
+                        try {
+                            const res = await fetch(model.data_link);
+                            if (!res.ok) throw new Error("Failed to fetch model data");
+                            return await res.json() as GeoJsonObject;
+                        } catch (error) {
+                            console.error("❌ Error fetching GeoJSON:", error);
+                            return null; 
+                        }
+                    })
+            );
+    
+            setGeoJSONDataList(geoJSONModels.filter((geoJSON): geoJSON is GeoJsonObject => geoJSON !== null));
+    
+        } catch (error) {
+            console.error("❌ Error fetching models:", error);
+        }
+    };
+    
+    
 
-
-    // --------------- ----------------------------------------------------------------
-    // --------------- Change data to Leaflet CRS-------------
+    // ✅ **Fetch Models on Mount**
     useEffect(() => {
-        geoJSONDataList.forEach((data, index) => {
-            if ("features" in data) {
-                console.log(`Dataset ${index + 1}:`, data);
-            }
-        });
-    }, [geoJSONDataList]);
-
-
+        fetchModels();
+    }, []);
 
     return (
         <div className="flex h-[calc(100vh-5rem)] overflow-hidden w-full">
-            <div
-                className={`transition-all duration-300 flex flex-col border-r border-gray-200/[0.25] z-50 ${sidebarOpen ? "w-64" : "min-w-12"}`}
-            >
+            {/* Sidebar */}
+            <div className={`transition-all duration-300 flex flex-col border-r border-gray-200/[0.25] z-50 ${sidebarOpen ? "w-64" : "min-w-12"}`}>
                 <IconButton onClick={() => setSidebarOpen(!sidebarOpen)} className="self-end m-2">
                     {sidebarOpen ? <PanelRightOpen /> : <PanelLeftOpen />}
                 </IconButton>
 
                 {sidebarOpen && (
                     <Box className="mt-2">
-                        <SidebarItems geoJSONDataList={geoJSONDataList} setGeoJSONDataList={setGeoJSONDataList} />
+                        {/* ✅ Pass `fetchModels` to SidebarItems */}
+                        <SidebarItems 
+                            geoJSONDataList={geoJSONDataList} 
+                            setGeoJSONDataList={setGeoJSONDataList} 
+                            fetchModels={fetchModels}  
+                        />
                     </Box>
                 )}
             </div>
 
             {/* Map Area */}
-
             <div className="relative flex-grow h-full">
-                <MapContainer
-                    center={[52.520008, 13.404954]}
-                    zoom={13}
-                    scrollWheelZoom={true}
-                    style={{ width: "100%", height: "100%" }}
-                    className="w-full h-full"
-                >
+                <MapContainer center={[52.520008, 13.404954]} zoom={13} scrollWheelZoom={true} style={{ width: "100%", height: "100%" }} className="w-full h-full">
                     <MapBounds geoJSONDataList={geoJSONDataList} />
                     <SearchControl />
                     <TileLayer key={activeLayer} url={activeLayer} />
@@ -98,22 +111,22 @@ const DashboardMap: React.FC<MapProps> = () => {
                                         icon: L.divIcon({
                                             className: "icon-cluster",
                                             html: `<div style="
-                        background-color: #ccccff; 
-                        border: 1px solid #0000ff;
-                        border-radius: 50%; 
-                        width: 10px; 
-                        height: 10px;
-                        opacity: 0.8;
-                      "></div>`,
+                                                background-color: #ccccff; 
+                                                border: 1px solid #0000ff;
+                                                border-radius: 50%; 
+                                                width: 10px; 
+                                                height: 10px;
+                                                opacity: 0.8;
+                                            "></div>`,
                                             iconSize: [10, 10],
                                             iconAnchor: [7, 7],
                                         }),
                                     })
                                 }
                                 onEachFeature={(feature, layer) => {
-                                    if (!feature || !feature.properties) return; // Prevents crashing if feature is undefined
+                                    if (!feature || !feature.properties) return;
 
-                                    // Generate HTML content for the tooltip
+                                    // Tooltip Content
                                     const tooltipContent = Object.entries(feature.properties)
                                         .map(([key, value]) => `<div style="margin-bottom:4px;"><strong>${key}:</strong> ${value}</div>`)
                                         .join("");
@@ -125,7 +138,7 @@ const DashboardMap: React.FC<MapProps> = () => {
                                         sticky: true,
                                     });
 
-                                    // Open tooltip on hover
+                                    // Open Tooltip on Hover
                                     layer.on("mouseover", () => layer.openTooltip());
                                     layer.on("mouseout", () => layer.closeTooltip());
 
@@ -133,13 +146,11 @@ const DashboardMap: React.FC<MapProps> = () => {
                                         setSelectedProperties(feature.properties);
                                     });
                                 }}
-
                             />
                         ))}
                     </Cluster>
 
-
-                    {/* Layer Selector Dropdown - Ensure it's inside the map */}
+                    {/* Layer Selector Dropdown */}
                     <div className="absolute bottom-2 left-2 z-[1001]">
                         <DropdownMenu onOpenChange={(open) => setIsOpen(open)}>
                             <DropdownMenuTrigger asChild>
@@ -150,18 +161,10 @@ const DashboardMap: React.FC<MapProps> = () => {
                                     </span>
                                 </span>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                side="top"
-                                align="start"
-                                className="border border-gray-300 rounded-lg shadow-md "
-                                style={{ zIndex: 1001 }}
-                            >
+                            <DropdownMenuContent side="top" align="start" className="border border-gray-300 rounded-lg shadow-md " style={{ zIndex: 1001 }}>
                                 {mapLayers.map((layer) => (
-                                    <DropdownMenuItem
-                                        key={layer.url}
-                                        onClick={() => setActiveLayer(layer.url)}
-                                        className={`cursor-pointer ${activeLayer === layer.url ? "bg-blue-500 " : "hover:bg-gray-200"}`}
-                                    >
+                                    <DropdownMenuItem key={layer.url} onClick={() => setActiveLayer(layer.url)} 
+                                        className={`cursor-pointer ${activeLayer === layer.url ? "bg-blue-500 " : "hover:bg-gray-200"}`}>
                                         {layer.name}
                                     </DropdownMenuItem>
                                 ))}
@@ -170,10 +173,10 @@ const DashboardMap: React.FC<MapProps> = () => {
                     </div>
                 </MapContainer>
 
+                {/* Feature Details Popup */}
                 {selectedProperties && (
                     <div className="absolute top-0 right-0 m-4 p-4 bg-white dark:bg-[hsl(279,100%,3.9%)] shadow-lg border 
                     rounded z-[1001] max-h-[calc(100vh-5rem)] overflow-y-auto">
-
                         <h3 className="text-base font-bold underline underline-offset-1 ">Feature Details</h3>
                         <ul>
                             {Object.entries(selectedProperties).map(([key, value]) => (
@@ -182,17 +185,14 @@ const DashboardMap: React.FC<MapProps> = () => {
                                 </li>
                             ))}
                         </ul>
-                        <button className="text-sm  border bg-blue-700 px-3 rounded" onClick={() => setSelectedProperties(null)}>
+                        <button className="text-sm border bg-blue-700 px-3 rounded" onClick={() => setSelectedProperties(null)}>
                             Close
                         </button>
                     </div>
                 )}
-
             </div>
         </div>
     );
-}
+};
 
 export default DashboardMap;
-
-

@@ -4,16 +4,13 @@ import * as L from "leaflet";
 import { GeoJsonObject } from "geojson";
 import { kml as kmlToGeoJSON } from "@tmcw/togeojson";
 
-const MapBounds: React.FC<{ geoJSONDataList?: GeoJsonObject[]; kmlFileUrl?: string }> = ({
-    geoJSONDataList = [],
-    kmlFileUrl,
-}) => {
+const MapBounds: React.FC<{ geoJSONDataList?: GeoJsonObject[]; kmlFileUrl?: string }> = ({ geoJSONDataList = [], kmlFileUrl }) => {
     const map = useMap();
 
     useEffect(() => {
         if (!map) return;
 
-        const  allBounds: L.LatLngBounds[] = [];
+        const allBounds: L.LatLngBounds[] = [];
 
         //  Handle GeoJSON Bounds (DO NOT ADD LAYERS)
         if (geoJSONDataList.length > 0) {
@@ -24,7 +21,6 @@ const MapBounds: React.FC<{ geoJSONDataList?: GeoJsonObject[]; kmlFileUrl?: stri
             });
         }
 
-        //  Handle KML (Convert to GeoJSON but DO NOT ADD LAYER)
         if (kmlFileUrl) {
             console.log("Fetching KML File:", kmlFileUrl);
             
@@ -33,7 +29,7 @@ const MapBounds: React.FC<{ geoJSONDataList?: GeoJsonObject[]; kmlFileUrl?: stri
                 .then((kmlText) => {
                     const parser = new DOMParser();
                     const kml = parser.parseFromString(kmlText, "application/xml");
-                    const geoJSONData = kmlToGeoJSON(kml); //  Convert KML to GeoJSON
+                    const geoJSONData = kmlToGeoJSON(kml);
 
                     if (geoJSONData) {
                         const layer = L.geoJSON(geoJSONData);
@@ -44,7 +40,6 @@ const MapBounds: React.FC<{ geoJSONDataList?: GeoJsonObject[]; kmlFileUrl?: stri
                 .catch((err) => console.error("Error loading KML file:", err));
         }
 
-        //  Fit Bounds to ALL Features
         if (allBounds.length > 0) {
             const mergedBounds = allBounds.reduce((acc, bounds) => acc.extend(bounds), allBounds[0]);
             if (mergedBounds.isValid()) {
