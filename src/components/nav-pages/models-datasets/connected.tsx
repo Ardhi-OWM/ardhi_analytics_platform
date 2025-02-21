@@ -20,11 +20,6 @@ interface ModelDataset {
     created_at?: string;
 }
 
-// // Allowed dataset and model file extensions
-// const datasetExtensions = ['.csv', '.xls', '.xlsx', '.json', '.geojson', '.tiff', '.shp', '.nc'];
-// const modelExtensions = ['.h5', '.onnx', '.pb', '.tflite', '.pkl', '.sav', '.rds'];
-
-// Function to check if a link is valid
 const isValidURL = (url: string) => {
     try {
         new URL(url);
