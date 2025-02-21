@@ -10,8 +10,8 @@ export const headerLinks = [
     },
     {
         id: "1",
-        name: "API Connections",
-        href: "/api-connections",
+        name: "Mode/Datasets Connections",
+        href: "/models-datasets",
         current: false
     },
     {
