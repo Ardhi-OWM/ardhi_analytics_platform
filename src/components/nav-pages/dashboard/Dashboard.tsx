@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { PanelLeftOpen, PanelRightOpen, ChevronDown, ChevronUp } from "lucide-react";
 import IconButton from "@mui/material/IconButton";
@@ -39,12 +39,11 @@ const DashboardMap: React.FC<MapProps> = () => {
         created_at: string;
     }
     
-    const fetchModels = async () => {
+    const fetchModels = useCallback(async () => {
         try {
             const response = await apiClient.get<ModelInput[]>("/inputs/");
             console.log("✅ Fetched Models:", response.data);
     
-            // ✅ Fetch GeoJSON data from `data_link` for each valid model
             const geoJSONModels = await Promise.all(
                 response.data
                     .filter((model) => model.file_type === "json" || model.file_type === "geojson")
@@ -65,10 +64,8 @@ const DashboardMap: React.FC<MapProps> = () => {
         } catch (error) {
             console.error("❌ Error fetching models:", error);
         }
-    };
+    }, []);
     
-    
-
     // ✅ **Fetch Models on Mount**
     useEffect(() => {
         fetchModels();

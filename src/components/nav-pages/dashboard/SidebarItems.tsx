@@ -7,8 +7,6 @@ import apiClient from "@/lib/apiClient"; // Centralized API client
 import { GeoJsonObject, FeatureCollection } from "geojson";
 import proj4 from "proj4";
 import { toWgs84 } from "@turf/projection";
-import { kml as kmlToGeoJSON } from "@tmcw/togeojson";
-import shp from "shpjs";
 
 // Internal Components
 import { Input } from "@/components/ui/input";
