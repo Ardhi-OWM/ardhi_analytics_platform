@@ -1,14 +1,15 @@
 "use client";
-
 import { useState } from "react";
 import { Link, MousePointerClick } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import apiClient from "@/lib/apiClient"; // Centralized API client
-import { GeoJsonObject, FeatureCollection } from "geojson";
+import { GeoJsonObject, FeatureCollection, Feature, Geometry } from "geojson";
 import proj4 from "proj4";
 import { toWgs84 } from "@turf/projection";
+import * as toGeoJSON from "@tmcw/togeojson"; 
+import Papa from "papaparse"; 
+import * as XLSX from "xlsx";
 
-// Internal Components
 import { Input } from "@/components/ui/input";
 import SubscriptionForm from "./SubscriptionForm";
 import FileUpload from "@/components/nav-pages/dashboard/FileUpload";
@@ -89,34 +90,218 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
 
     const { label, placeholder } = getLabelAndPlaceholder(inputType);
 
+ 
     const handleFileUpload = async (uploadedFile: File) => {
-        if (!uploadedFile.name.endsWith(".geojson")) {
-            console.log("Unsupported file format");
-            return;
-        }
-
-        try {
-            const fileText = await uploadedFile.text();
-            let geoJSON = JSON.parse(fileText) as FeatureCollection;
-
-            const geoJSONWithCRS = geoJSON as FeatureCollection & { crs?: { properties?: { name?: string } } };
-            if (geoJSONWithCRS.crs?.properties?.name) {
-                const originalCrs = geoJSONWithCRS.crs.properties.name;
-                console.log("Detected CRS:", originalCrs);
-
-                if (originalCrs !== "urn:ogc:def:crs:OGC:1.3:CRS84" && originalCrs !== "EPSG:4326") {
-                    geoJSON = transformGeoJSON(geoJSON, originalCrs);
-                }
-            } else {
-                console.warn("No CRS detected, assuming EPSG:4326");
+        const fileExtension = uploadedFile.name.split(".").pop()?.toLowerCase();
+    
+        if (fileExtension === "geojson") {
+            try {
+                const fileText = await uploadedFile.text();
+                let geoJSON = JSON.parse(fileText) as FeatureCollection;
+                setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
+                console.log("✅ Uploaded GeoJSON:", geoJSON);
+            } catch (error) {
+                console.error("❌ Error parsing GeoJSON:", error);
             }
-
-            setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
-            console.log("Uploaded and transformed GeoJSON:", geoJSON);
-        } catch (error) {
-            console.error("Error parsing GeoJSON:", error);
+        } else if (fileExtension === "csv") {
+            try {
+                const fileText = await uploadedFile.text();
+                Papa.parse(fileText, {
+                    header: true,
+                    dynamicTyping: true,
+                    complete: (result) => {
+                        processTableData(result.data as Array<Record<string, any>>, "CSV");
+                    },
+                });
+            } catch (error) {
+                console.error("❌ Error parsing CSV:", error);
+            }
+        } else if (fileExtension === "kml") {
+            try {
+                const fileText = await uploadedFile.text();
+                const parser = new DOMParser();
+                const kml = parser.parseFromString(fileText, "text/xml");
+                const geoJSON = toGeoJSON.kml(kml) as FeatureCollection;
+    
+                setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
+                console.log("✅ Uploaded KML as GeoJSON:", geoJSON);
+            } catch (error) {
+                console.error("❌ Error parsing KML:", error);
+            }
+        } else if (fileExtension === "xlsx" || fileExtension === "xls") {
+            try {
+                const fileBuffer = await uploadedFile.arrayBuffer();
+                const workbook = XLSX.read(fileBuffer, { type: "array" });
+    
+                const sheetName = workbook.SheetNames[0]; 
+                const sheet = workbook.Sheets[sheetName];
+                const jsonData: Record<string, any>[] = XLSX.utils.sheet_to_json(sheet, { raw: true });
+    
+                processTableData(jsonData, "Excel");
+            } catch (error) {
+                console.error("❌ Error parsing Excel file:", error);
+            }
+        } else {
+            console.log("❌ Unsupported file format");
         }
     };
+    
+    const processTableData = (rows: Array<Record<string, any>>, source: "CSV" | "Excel") => {
+        if (!rows.length) {
+            console.error(`❌ ${source} file is empty`);
+            return;
+        }
+    
+        let features: Feature[] = [];
+    
+        rows.forEach((row) => {
+            if (row.geometry === "MultiPolygon" && row.coordinates) {
+                try {
+                    console.log(`🔹 Raw MultiPolygon Coordinates from ${source}:`, row.coordinates);
+    
+                    let rawCoords = row.coordinates;
+    
+                    if (typeof rawCoords === "string") {
+                        rawCoords = JSON.parse(`[${rawCoords}]`);
+                    }
+    
+                    console.log(`✅ Parsed MultiPolygon coordinates from ${source}:`, rawCoords);
+    
+                    if (!Array.isArray(rawCoords)) {
+                        throw new Error("Coordinates are not an array");
+                    }
+    
+                    const filteredCoords: [number, number][][][] = [];
+                    let currentRing: [number, number][] = [];
+    
+                    for (let i = 0; i < rawCoords.length; i += 3) {
+                        if (rawCoords[i + 1] !== undefined) {
+                            let lng = parseFloat(rawCoords[i]);
+                            let lat = parseFloat(rawCoords[i + 1]);
+    
+                            if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+                                console.warn(`🚨 Invalid coordinate detected: [${lng}, ${lat}]. Attempting to swap...`);
+                                [lat, lng] = [lng, lat];
+                            }
+    
+                            if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+                                currentRing.push([lng, lat]);
+                            } else {
+                                console.error(`❌ Skipping invalid coordinate pair: [${lng}, ${lat}]`);
+                            }
+                        }
+                    }
+    
+                    if (currentRing.length > 0) {
+                        filteredCoords.push([currentRing]);
+                    }
+    
+                    console.log(`✅ Final MultiPolygon Structure from ${source}:`, filteredCoords);
+    
+                    features.push({
+                        type: "Feature",
+                        geometry: {
+                            type: "MultiPolygon",
+                            coordinates: filteredCoords,
+                        },
+                        properties: { 
+                            ...row, 
+                            coordinates: undefined, 
+                        },
+                    });
+                } catch (error) {
+                    console.error(`❌ Error parsing MultiPolygon coordinates from ${source}:`, error);
+                }
+            } else if (row.geometry === "Polygon" && row.coordinates) {
+                try {
+                    console.log(`🔹 Raw Polygon Coordinates from ${source}:`, row.coordinates);
+    
+                    let rawCoords = row.coordinates;
+    
+                    if (typeof rawCoords === "string") {
+                        rawCoords = JSON.parse(`[${rawCoords}]`);
+                    }
+    
+                    console.log(`✅ Parsed Polygon coordinates from ${source}:`, rawCoords);
+    
+                    if (!Array.isArray(rawCoords)) {
+                        throw new Error("Coordinates are not an array");
+                    }
+    
+                    const polygonCoords: [number, number][][] = [];
+                    let currentRing: [number, number][] = [];
+    
+                    for (let i = 0; i < rawCoords.length; i += 3) {
+                        if (rawCoords[i + 1] !== undefined) {
+                            let lng = parseFloat(rawCoords[i]);
+                            let lat = parseFloat(rawCoords[i + 1]);
+    
+                            if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+                                console.warn(`🚨 Invalid coordinate detected: [${lng}, ${lat}]. Attempting to swap...`);
+                                [lat, lng] = [lng, lat];
+                            }
+    
+                            if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+                                currentRing.push([lng, lat]);
+                            } else {
+                                console.error(`❌ Skipping invalid coordinate pair: [${lng}, ${lat}]`);
+                            }
+                        }
+                    }
+    
+                    if (currentRing.length > 0) {
+                        polygonCoords.push(currentRing);
+                    }
+    
+                    console.log(`✅ Final Polygon Structure from ${source}:`, polygonCoords);
+    
+                    features.push({
+                        type: "Feature",
+                        geometry: {
+                            type: "Polygon",
+                            coordinates: polygonCoords,
+                        },
+                        properties: { 
+                            ...row, 
+                            coordinates: undefined, 
+                        },
+                    });
+                } catch (error) {
+                    console.error(`❌ Error parsing Polygon coordinates from ${source}:`, error);
+                }
+            } else if (row.latitude && row.longitude) {
+                let lng = parseFloat(row.longitude);
+                let lat = parseFloat(row.latitude);
+    
+                if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+                    console.warn(`🚨 Invalid point coordinate: [${lng}, ${lat}]. Swapping...`);
+                    [lat, lng] = [lng, lat];
+                }
+    
+                if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+                    features.push({
+                        type: "Feature",
+                        geometry: {
+                            type: "Point",
+                            coordinates: [lng, lat],
+                        },
+                        properties: row,
+                    });
+                } else {
+                    console.error(`❌ Skipping invalid point: [${lng}, ${lat}]`);
+                }
+            }
+        });
+    
+        const geoJSON: FeatureCollection = {
+            type: "FeatureCollection",
+            features,
+        };
+    
+        setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
+        console.log(`✅ Uploaded ${source} as GeoJSON:`, geoJSON);
+    };
+    
 
     const transformGeoJSON = (geoJSON: FeatureCollection, sourceCrs: string): FeatureCollection => {
         try {
@@ -145,6 +330,8 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
         }
     };
 
+    
+    
     return (
         <div className="flex flex-col space-y-8 mx-2">
             <div className="space-y-4">
@@ -179,7 +366,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                         onClick={handleSubmit}
                         disabled={isSubmitting}
                         className={`mt-4 px-4 py-1 rounded ${
-                            isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 text-white dark:text-black hover:bg-blue-600 w-3/4 text-sm"
+                            isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-600"
                         }`}
                     >
                         {isSubmitting ? "Submitting..." : "Submit Service"}
@@ -218,7 +405,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                         <li key={index} className="flex justify-between items-center p-2 mb-2">
                             <span className="text-sm ibm-plex-mono-medium-italic">Dataset {index + 1}</span>
                             <button
-                                className="bg-red-500  px-3  rounded hover:bg-red-600 text-sm"
+                                className="bg-red-500 px-3 rounded hover:bg-red-600 text-sm"
                                 onClick={() => setGeoJSONDataList((prevData) => prevData.filter((_, i) => i !== index))}
                             >
                                 Remove
@@ -227,8 +414,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                     ))}
                 </ul>
             </div>
-            {/* ----------------- ------------------------------------------ */}
-            {/* ----------------- Newsletter subscription---------------- */}
+
             <div className="space-y-4 mx-2">
                 <SubscriptionForm />
             </div>
