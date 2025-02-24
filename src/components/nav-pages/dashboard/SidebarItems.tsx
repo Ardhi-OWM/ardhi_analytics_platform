@@ -120,17 +120,16 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
 
     const transformGeoJSON = (geoJSON: FeatureCollection, sourceCrs: string): FeatureCollection => {
         try {
-            proj4.defs([
-                ["EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs"],
-                ["EPSG:3857", "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"],
-            ]);
-
+            console.log("Transforming from CRS:", sourceCrs); 
+            proj4.defs(sourceCrs, `+proj=utm +zone=33 +datum=WGS84 +units=m +no_defs`);
+    
             return toWgs84(geoJSON, { mutate: true });
         } catch (error) {
             console.error("Error transforming CRS:", error);
             return geoJSON;
         }
     };
+    
 
     const handleUrlLoad = async () => {
         try {
