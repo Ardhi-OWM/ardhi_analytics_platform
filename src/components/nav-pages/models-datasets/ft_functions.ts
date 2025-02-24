@@ -10,6 +10,7 @@ interface ModelDataset {
     provider: string;
     region: string;
     location: string;
+    link: string; 
     created_at?: string;
 }
 
@@ -34,7 +35,7 @@ export const addItem = async (
         const storedItems = localStorage.getItem("models_datasets");
         const existingItems: ModelDataset[] = storedItems ? JSON.parse(storedItems) : [];
 
-        if (existingItems.some(i => i.location === item.location)) {
+        if (existingItems.some(i => i.location === item.location || i.link === item.link)) {
             alert("This model/dataset already exists.");
             setIsSubmitting(false);
             return;

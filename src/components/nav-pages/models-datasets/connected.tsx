@@ -29,7 +29,6 @@ const isValidURL = (url: string) => {
     }
 };
 
-// Function to check if the link is a valid dataset or model
 const isValidModelDatasetLink = (url: string, type: "model" | "dataset") => {
     if (!isValidURL(url)) return false;
     const lowerUrl = url.toLowerCase();
@@ -42,6 +41,8 @@ const ConnectedModelDatasets = () => {
     const [items, setItems] = useState<ModelDataset[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filterType, setFilterType] = useState<"all" | "model" | "dataset">("all");
 
     useEffect(() => {
         if (!user) return;
@@ -51,7 +52,7 @@ const ConnectedModelDatasets = () => {
             setItems(parsedItems);
         }
     }, [user]);
-    
+
     const addItem = async (newItem: ModelDataset) => {
         if (!user || isSubmitting) return;
 
@@ -104,16 +105,47 @@ const ConnectedModelDatasets = () => {
             alert("Failed to delete model/dataset. Please try again.");
         }
     };
-    
+
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
         return date.toLocaleDateString('ko-KR') + ' ' + date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
     };
 
+    const filteredItems = items.filter((item) => {
+        const search = searchTerm.trim().toLowerCase(); 
+
+       const provider = item.provider?.toLowerCase() || "";
+        const region = item.region?.toLowerCase() || "";
+        const link = item.link?.toLowerCase() || "";
+        const type = item.type?.toLowerCase() || "";
+
+        const matchesSearch = 
+            search === "" ||  
+            provider.includes(search) || 
+            region.includes(search) || 
+            link.includes(search) ||
+            type.includes(search);  
+
+        const matchesType = filterType === "all" || item.type === filterType;
+
+        return matchesSearch && matchesType;
+    });
+
     return (
-        <div className="w-full flex flex-col ">
+        <div className="w-full flex flex-col">
             <h1 className="text-2xl ubuntu-mono-bold mb-4">Connected Models and Datasets</h1>
+
+            {/* Search Input */}
+            <div className="flex justify-between items-center mb-4">
+                <input
+                    type="text"
+                    placeholder="Search by provider, region, or URL..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full sm:w-1/2 px-4 py-2 border rounded-lg"
+                />
+            </div>
 
             <div className="flex justify-center w-1/2 md:w-1/4 my-6">
                 <ButtonMine
@@ -143,30 +175,41 @@ const ConnectedModelDatasets = () => {
                 />
             )}
 
-            <Table>
+            <Table className="w-full">
                 <TableHeader>
-                    <TableRow>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Provider</TableHead>
-                        <TableHead>Region</TableHead>
-                        <TableHead>Storage Location</TableHead>
-                        <TableHead>Created At</TableHead>
-                        <TableHead>Action</TableHead>
+                    <TableRow className="bg-gray-100 dark:bg-gray-900">
+                        <TableHead className="w-1/6 text-left">
+                            <span>Type</span>
+                            <select
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value as "all" | "model" | "dataset")}
+                                className="ml-6 px-2 py-1 border border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800" // ✅ Darker border applied
+                            >
+                                <option value="all">All</option>
+                                <option value="model">Model</option>
+                                <option value="dataset">Dataset</option>
+                            </select>
+                        </TableHead>
+                        <TableHead className="w-1/6 text-left">Provider</TableHead>
+                        <TableHead className="w-1/6 text-left">Region</TableHead>
+                        <TableHead className="w-1/4 text-left">Storage URL</TableHead>
+                        <TableHead className="w-1/6 text-left">Created At</TableHead>
+                        <TableHead className="w-1/6 text-left">Action</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {items.map((item, index) => (
-                        <TableRow key={item.id || index}>
-                            <TableCell>{item.type}</TableCell>
-                            <TableCell>{item.provider}</TableCell>
-                            <TableCell>{item.region}</TableCell>
-                            <TableCell className="text-sm text-blue-500 underline ibm-plex-mono-regular-italic">
-                                <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                    {filteredItems.map((item, index) => (
+                        <TableRow key={item.id || index} className="border-b border-gray-300">
+                            <TableCell className="w-1/6">{item.type}</TableCell>
+                            <TableCell className="w-1/6">{item.provider}</TableCell>
+                            <TableCell className="w-1/6">{item.region}</TableCell>
+                            <TableCell className="w-1/4 text-blue-500 underline">
+                                <a href={item.link} target="_blank" rel="noopener noreferrer">
                                     {item.link}
                                 </a>
                             </TableCell>
-                            <TableCell className="text-sm">{formatDate(item.created_at)}</TableCell>
-                            <TableCell>
+                            <TableCell className="w-1/6">{formatDate(item.created_at)}</TableCell>
+                            <TableCell className="w-1/6">
                                 <button
                                     onClick={() => deleteItem(item.id)}
                                     className="bg-red-400 px-4 py-1 rounded hover:bg-red-600 text-sm"
@@ -178,6 +221,7 @@ const ConnectedModelDatasets = () => {
                     ))}
                 </TableBody>
             </Table>
+
         </div>
     );
 };
