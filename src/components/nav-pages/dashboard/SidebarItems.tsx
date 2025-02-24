@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link, MousePointerClick } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import apiClient from "@/lib/apiClient"; // Centralized API client
-import { GeoJsonObject, FeatureCollection, Feature, Geometry } from "geojson";
+import { GeoJsonObject, FeatureCollection, Feature} from "geojson";
 import proj4 from "proj4";
 import { toWgs84 } from "@turf/projection";
 import * as toGeoJSON from "@tmcw/togeojson"; 
@@ -97,7 +97,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
         if (fileExtension === "geojson") {
             try {
                 const fileText = await uploadedFile.text();
-                let geoJSON = JSON.parse(fileText) as FeatureCollection;
+                const geoJSON = JSON.parse(fileText) as FeatureCollection;
                 setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
                 console.log("✅ Uploaded GeoJSON:", geoJSON);
             } catch (error) {
@@ -110,7 +110,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                     header: true,
                     dynamicTyping: true,
                     complete: (result) => {
-                        processTableData(result.data as Array<Record<string, any>>, "CSV");
+                        processTableData(result.data as Array<Record<string, unknown>>, "CSV");
                     },
                 });
             } catch (error) {
@@ -173,17 +173,16 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
     
                     const filteredCoords: [number, number][][][] = [];
                     let currentRing: [number, number][] = [];
-    
+
                     for (let i = 0; i < rawCoords.length; i += 3) {
                         if (rawCoords[i + 1] !== undefined) {
                             let lng = parseFloat(rawCoords[i]);
                             let lat = parseFloat(rawCoords[i + 1]);
-    
+
                             if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
-                                console.warn(`🚨 Invalid coordinate detected: [${lng}, ${lat}]. Attempting to swap...`);
                                 [lat, lng] = [lng, lat];
                             }
-    
+
                             if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
                                 currentRing.push([lng, lat]);
                             } else {
@@ -191,10 +190,11 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                             }
                         }
                     }
-    
+
                     if (currentRing.length > 0) {
                         filteredCoords.push([currentRing]);
                     }
+
     
                     console.log(`✅ Final MultiPolygon Structure from ${source}:`, filteredCoords);
     
