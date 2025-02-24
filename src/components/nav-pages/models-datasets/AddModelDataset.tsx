@@ -64,7 +64,7 @@ const AddModelDataset = ({ onClose, onItemAdded }: {
 
                 isDuplicate = existingCheck.data.exists;
             } catch (checkError) {
-                console.warn("Could not verify duplicate status, proceeding anyway.");
+                console.error("Duplicate check failed:", checkError); 
             }
 
             if (isDuplicate) {
