@@ -4,8 +4,8 @@ import { Link, MousePointerClick } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import apiClient from "@/lib/apiClient"; // Centralized API client
 import { GeoJsonObject, FeatureCollection, Feature} from "geojson";
-import proj4 from "proj4";
-import { toWgs84 } from "@turf/projection";
+// import proj4 from "proj4";
+// import { toWgs84 } from "@turf/projection";
 import * as toGeoJSON from "@tmcw/togeojson"; 
 import Papa from "papaparse"; 
 import * as XLSX from "xlsx";
@@ -153,7 +153,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             return;
         }
 
-        let features: Feature[] = [];
+        const features: Feature[] = [];
 
         rows.forEach((row) => {
             if (row.geometry === "MultiPolygon" && row.coordinates) {
