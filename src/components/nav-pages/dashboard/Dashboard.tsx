@@ -69,8 +69,8 @@ const DashboardMap: React.FC<MapProps> = () => {
     // ✅ **Fetch Models on Mount**
     useEffect(() => {
         fetchModels();
-    }, []);
-
+    }, [fetchModels]); 
+    
     return (
         <div className="flex h-[calc(100vh-5rem)] overflow-hidden w-full">
             {/* Sidebar */}
