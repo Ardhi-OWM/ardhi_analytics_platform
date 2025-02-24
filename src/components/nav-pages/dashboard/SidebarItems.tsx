@@ -89,11 +89,12 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
     };
 
     const { label, placeholder } = getLabelAndPlaceholder(inputType);
+    
+    type TableRow = Record<string, string | number | boolean | null>;
 
- 
     const handleFileUpload = async (uploadedFile: File) => {
         const fileExtension = uploadedFile.name.split(".").pop()?.toLowerCase();
-    
+
         if (fileExtension === "geojson") {
             try {
                 const fileText = await uploadedFile.text();
@@ -106,11 +107,11 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
         } else if (fileExtension === "csv") {
             try {
                 const fileText = await uploadedFile.text();
-                Papa.parse(fileText, {
+                Papa.parse<TableRow>(fileText, {
                     header: true,
                     dynamicTyping: true,
                     complete: (result) => {
-                        processTableData(result.data as Array<Record<string, unknown>>, "CSV");
+                        processTableData(result.data, "CSV");
                     },
                 });
             } catch (error) {
@@ -122,7 +123,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                 const parser = new DOMParser();
                 const kml = parser.parseFromString(fileText, "text/xml");
                 const geoJSON = toGeoJSON.kml(kml) as FeatureCollection;
-    
+
                 setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
                 console.log("✅ Uploaded KML as GeoJSON:", geoJSON);
             } catch (error) {
@@ -132,11 +133,11 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             try {
                 const fileBuffer = await uploadedFile.arrayBuffer();
                 const workbook = XLSX.read(fileBuffer, { type: "array" });
-    
-                const sheetName = workbook.SheetNames[0]; 
+
+                const sheetName = workbook.SheetNames[0];
                 const sheet = workbook.Sheets[sheetName];
-                const jsonData: Record<string, any>[] = XLSX.utils.sheet_to_json(sheet, { raw: true });
-    
+                const jsonData: TableRow[] = XLSX.utils.sheet_to_json(sheet, { raw: true });
+
                 processTableData(jsonData, "Excel");
             } catch (error) {
                 console.error("❌ Error parsing Excel file:", error);
@@ -145,22 +146,21 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             console.log("❌ Unsupported file format");
         }
     };
-    
-    const processTableData = (rows: Array<Record<string, any>>, source: "CSV" | "Excel") => {
+
+    const processTableData = (rows: TableRow[], source: "CSV" | "Excel") => {
         if (!rows.length) {
             console.error(`❌ ${source} file is empty`);
             return;
         }
-    
+
         let features: Feature[] = [];
-    
+
         rows.forEach((row) => {
             if (row.geometry === "MultiPolygon" && row.coordinates) {
                 try {
                     console.log(`🔹 Raw MultiPolygon Coordinates from ${source}:`, row.coordinates);
-    
+
                     let rawCoords = row.coordinates;
-    
                     if (typeof rawCoords === "string") {
                         rawCoords = JSON.parse(`[${rawCoords}]`);
                     }
@@ -170,14 +170,14 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                     if (!Array.isArray(rawCoords)) {
                         throw new Error("Coordinates are not an array");
                     }
-    
+
                     const filteredCoords: [number, number][][][] = [];
-                    let currentRing: [number, number][] = [];
+                    const currentRing: [number, number][] = [];
 
                     for (let i = 0; i < rawCoords.length; i += 3) {
                         if (rawCoords[i + 1] !== undefined) {
-                            let lng = parseFloat(rawCoords[i]);
-                            let lat = parseFloat(rawCoords[i + 1]);
+                            let lng = parseFloat(rawCoords[i] as string);
+                            let lat = parseFloat(rawCoords[i + 1] as string);
 
                             if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
                                 [lat, lng] = [lng, lat];
@@ -215,9 +215,8 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             } else if (row.geometry === "Polygon" && row.coordinates) {
                 try {
                     console.log(`🔹 Raw Polygon Coordinates from ${source}:`, row.coordinates);
-    
+
                     let rawCoords = row.coordinates;
-    
                     if (typeof rawCoords === "string") {
                         rawCoords = JSON.parse(`[${rawCoords}]`);
                     }
@@ -227,20 +226,20 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                     if (!Array.isArray(rawCoords)) {
                         throw new Error("Coordinates are not an array");
                     }
-    
+
                     const polygonCoords: [number, number][][] = [];
-                    let currentRing: [number, number][] = [];
-    
+                    const currentRing: [number, number][] = [];
+
                     for (let i = 0; i < rawCoords.length; i += 3) {
                         if (rawCoords[i + 1] !== undefined) {
-                            let lng = parseFloat(rawCoords[i]);
-                            let lat = parseFloat(rawCoords[i + 1]);
-    
+                            let lng = parseFloat(rawCoords[i] as string);
+                            let lat = parseFloat(rawCoords[i + 1] as string);
+
                             if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
                                 console.warn(`🚨 Invalid coordinate detected: [${lng}, ${lat}]. Attempting to swap...`);
                                 [lat, lng] = [lng, lat];
                             }
-    
+
                             if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
                                 currentRing.push([lng, lat]);
                             } else {
@@ -248,7 +247,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                             }
                         }
                     }
-    
+
                     if (currentRing.length > 0) {
                         polygonCoords.push(currentRing);
                     }
@@ -270,14 +269,14 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                     console.error(`❌ Error parsing Polygon coordinates from ${source}:`, error);
                 }
             } else if (row.latitude && row.longitude) {
-                let lng = parseFloat(row.longitude);
-                let lat = parseFloat(row.latitude);
-    
+                let lng = parseFloat(row.longitude as string);
+                let lat = parseFloat(row.latitude as string);
+
                 if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
                     console.warn(`🚨 Invalid point coordinate: [${lng}, ${lat}]. Swapping...`);
                     [lat, lng] = [lng, lat];
                 }
-    
+
                 if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
                     features.push({
                         type: "Feature",
@@ -292,28 +291,27 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                 }
             }
         });
-    
+
         const geoJSON: FeatureCollection = {
             type: "FeatureCollection",
             features,
         };
-    
+
         setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
         console.log(`✅ Uploaded ${source} as GeoJSON:`, geoJSON);
     };
-    
 
-    const transformGeoJSON = (geoJSON: FeatureCollection, sourceCrs: string): FeatureCollection => {
-        try {
-            console.log("Transforming from CRS:", sourceCrs); 
-            proj4.defs(sourceCrs, `+proj=utm +zone=33 +datum=WGS84 +units=m +no_defs`);
+    // const transformGeoJSON = (geoJSON: FeatureCollection, sourceCrs: string): FeatureCollection => {
+    //     try {
+    //         console.log("Transforming from CRS:", sourceCrs); 
+    //         proj4.defs(sourceCrs, `+proj=utm +zone=33 +datum=WGS84 +units=m +no_defs`);
     
-            return toWgs84(geoJSON, { mutate: true });
-        } catch (error) {
-            console.error("Error transforming CRS:", error);
-            return geoJSON;
-        }
-    };
+    //         return toWgs84(geoJSON, { mutate: true });
+    //     } catch (error) {
+    //         console.error("Error transforming CRS:", error);
+    //         return geoJSON;
+    //     }
+    // };
     
 
     const handleUrlLoad = async () => {
