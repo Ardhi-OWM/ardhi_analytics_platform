@@ -45,13 +45,11 @@ const GeoTIFFOverlay: React.FC<GeoTIFFOverlayProps> = ({ geoTIFFOverlay, onRemov
     return null;
 };
 
-const DashboardMap: React.FC = () => {
+const DashboardMap: React.FC<MapProps> = () => {
     const [geoJSONDataList, setGeoJSONDataList] = useState<GeoJsonObject[]>([]);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
-    const [activeLayer, setActiveLayer] = useState(
-        mapLayers.find((layer) => layer.default)?.url || mapLayers[0].url
-    );
+    const [activeLayer, setActiveLayer] = useState(mapLayers.find(layer => layer.default)?.url || mapLayers[0].url);
     const [geoTIFFOverlay, setGeoTIFFOverlay] = useState<L.ImageOverlay | null>(null);
     const [selectedProperties, setSelectedProperties] = useState<Record<string, string | number | boolean> | null>(null);
 
@@ -90,6 +88,7 @@ const DashboardMap: React.FC = () => {
         }
     }, []);
 
+        // ✅ **Fetch Models on Mount**
     useEffect(() => {
         fetchModels();
     }, [fetchModels]);
@@ -109,6 +108,7 @@ const DashboardMap: React.FC = () => {
 
                 {sidebarOpen && (
                     <Box className="mt-2">
+                        {/* ✅ Pass `fetchModels` to SidebarItems */}
                         <SidebarItems 
                             geoJSONDataList={geoJSONDataList} 
                             setGeoJSONDataList={setGeoJSONDataList} 
@@ -157,7 +157,7 @@ const DashboardMap: React.FC = () => {
                                 }
                                 onEachFeature={(feature, layer) => {
                                     if (!feature || !feature.properties) return;
-
+                                    // Tooltip Content
                                     const tooltipContent = Object.entries(feature.properties)
                                         .map(([key, value]) => `<div style="margin-bottom:4px;"><strong>${key}:</strong> ${value}</div>`)
                                         .join("");
@@ -168,7 +168,7 @@ const DashboardMap: React.FC = () => {
                                         opacity: 0.9,
                                         sticky: true,
                                     });
-
+                                        // Open Tooltip on Hover
                                     layer.on("mouseover", () => layer.openTooltip());
                                     layer.on("mouseout", () => layer.closeTooltip());
 
