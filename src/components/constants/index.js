@@ -10,8 +10,8 @@ export const headerLinks = [
     },
     {
         id: "1",
-        name: "API Connections",
-        href: "/api-connections",
+        name: "Models/Datasets",
+        href: "/models-datasets",
         current: false
     },
     {
@@ -20,6 +20,25 @@ export const headerLinks = [
         href: "/converter",
         current: false
     },
+    {
+        id: "4",
+        name: "Geo-Tools",
+        href: "/geotools",
+        current: false,
+        subLinks: [
+            {
+                id: "4.1",
+                name: "Feature Creation",
+                href: "/geotools/feature-creation",
+            },
+            {
+                id: "4.2",
+                name: "Ardhi Chat",
+                href: "/geotools/ardhi-chat",
+            },
+        ],
+    },
+
 
 ];
 // ------------------- FileFormats Links ------------------- //

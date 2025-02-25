@@ -11,30 +11,39 @@ const SubscriptionForm: React.FC = () => {
     const handleSubscription = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-
+        setMessage(""); // Reset message
+    
         if (!user) {
             setMessage("You need to be logged in to subscribe.");
             setLoading(false);
             return;
         }
-
+    
         const payload = {
-            user_id: user.id, // Ensure user_id is sent
+            user_id: user.id,
             email,
         };
-
+    
         try {
             const response = await apiClient.post("/subscriptions/", payload);
             console.log("Response:", response.data);
             setMessage("Thank you for subscribing!");
-        } catch (err) {
-            console.error("Error subscribing:", err);
-            setMessage("An error occurred. Please try again.");
-        } finally {
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.error("Error subscribing:", err);
+                setMessage(err.message);
+            } else {
+                console.error("Unknown error:", err);
+                setMessage("This email is already subscribed.");
+            }
+        }
+        finally {
             setLoading(false);
             setEmail("");
         }
     };
+    
+    
 
     return (
         <form onSubmit={handleSubscription} className="space-y-4 mt-8">

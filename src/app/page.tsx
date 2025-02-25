@@ -59,10 +59,24 @@ export default function NavigationMenuPage() {
               height={28}
             />
           </span></h1>
-        <Link href="/dashboard" passHref className="px-4 flex items-center space-x-2 text-xs ">
-          <span className="align-middle underline underline-offset-4 text-green-500 hover:text-green-300 ">TO DASHBOARD</span>
-          <MoveUpRight className="w-4 h-4 align-middle text-green-500 hover:text-green-300 " />
-        </Link>
+        <div className="flex space-x-4">
+          <Link href="/dashboard"
+            passHref
+            className="px-4 flex items-center space-x-2 text-xs ">
+            <span className="align-middle underline underline-offset-4 text-green-500 hover:text-green-300 ">TO DASHBOARD</span>
+            <MoveUpRight className="w-4 h-4 align-middle text-green-500 hover:text-green-300 " />
+          </Link>
+          <Link
+            href="https://ardhi.de"
+            passHref
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 flex items-center space-x-2 text-xs"
+          >
+            <span className="align-middle underline underline-offset-4 text-green-500 hover:text-green-300 ">TO ARDI LANDING PAGE </span>
+            <MoveUpRight className="w-4 h-4 align-middle text-green-500 hover:text-green-300 " />
+          </Link>
+        </div>
 
       </div>
 
