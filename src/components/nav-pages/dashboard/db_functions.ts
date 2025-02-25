@@ -11,24 +11,6 @@ import { GeoJsonObject } from 'geojson';
 
 
 
-const GeoTIFFOverlay: React.FC<GeoTIFFOverlayProps> = ({ geoTIFFOverlay }) => {
-    const map = useMap();
-
-    useEffect(() => {
-        if (geoTIFFOverlay) {
-            geoTIFFOverlay.addTo(map);
-
-            // Fit the map to the bounds of the overlay
-            map.fitBounds(geoTIFFOverlay.getBounds());
-
-            // Cleanup function to remove the overlay when the component unmounts
-            return () => {
-                geoTIFFOverlay.remove();
-            };
-        }
-    }, [geoTIFFOverlay, map]);
-
-    return null;
 
 // ------------------  ----------------------------- -----------------
 // ------------------ Custom Search Control (Fixed) ------------------

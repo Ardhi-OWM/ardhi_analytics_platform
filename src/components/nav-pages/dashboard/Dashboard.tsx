@@ -11,7 +11,7 @@ import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { GeoJsonObject } from 'geojson';
 import Cluster from "react-leaflet-cluster";
 import apiClient from "@/lib/apiClient"; // ✅ Import API Client
-
+import { useMap } from "react-leaflet";
 import { mapLayers } from "@/components/constants";
 import SidebarItems from "@/components/nav-pages/dashboard/SidebarItems";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -57,9 +57,10 @@ const GeoTIFFOverlay: React.FC<GeoTIFFOverlayProps> = ({ geoTIFFOverlay }) => {
 
     return null; // This component doesn't render anything
 };
+
 /*
 // Component to handle map bounds
-const MapBounds: React.FC<{ geoJSONDataList: CustomGeoJSON[] }> = ({ geoJSONDataList }) => {
+const MapBounds: React.FC<{ geoJSONDataList: GeoJsonObject[] }> = ({ geoJSONDataList }) => {
     const map = useMap();
 
     useEffect(() => {
@@ -92,7 +93,7 @@ const MapBounds: React.FC<{ geoJSONDataList: CustomGeoJSON[] }> = ({ geoJSONData
 
 // Main DashboardMap component
 const DashboardMap: React.FC = () => {
-    const [geoJSONDataList, setGeoJSONDataList] = useState<CustomGeoJSON[]>([]);
+    const [geoJSONDataList, setGeoJSONDataList] = useState<GeoJsonObject[]>([]);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
     const [activeLayer, setActiveLayer] = useState(
@@ -154,14 +155,14 @@ const DashboardMap: React.FC = () => {
 
                 {sidebarOpen && (
                     <Box className="mt-2">
-                        <SidebarItems
-                            geoJSONDataList={geoJSONDataList}
-                            setGeoJSONDataList={setGeoJSONDataList}
-                            setGeoTIFFOverlay={setGeoTIFFOverlay}
+                        
+                  
+
                         {/* ✅ Pass `fetchModels` to SidebarItems */}
                         <SidebarItems 
                             geoJSONDataList={geoJSONDataList} 
                             setGeoJSONDataList={setGeoJSONDataList} 
+                            setGeoTIFFOverlay={setGeoTIFFOverlay}
                             fetchModels={fetchModels}  
                         />
                     </Box>

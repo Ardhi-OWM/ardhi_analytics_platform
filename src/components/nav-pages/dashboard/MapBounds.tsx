@@ -52,3 +52,5 @@ const MapBounds: React.FC<{ geoJSONDataList?: GeoJsonObject[]; kmlFileUrl?: stri
 };
 
 export default MapBounds;
+
+
