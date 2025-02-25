@@ -5,7 +5,7 @@ import { Send } from "lucide-react";
 
 const ArdhiChat: React.FC = () => {
     const [messages, setMessages] = useState([
-        { text: "Hello! I'm Ardhi Chat. How can I assist you with geospatial analysis today?", sender: "bot" }
+        { text: "Hello! I'm Ardhi Chat. How can I assist you today with your geospatial questions ?", sender: "bot" }
     ]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
