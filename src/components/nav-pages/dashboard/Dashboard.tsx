@@ -10,22 +10,12 @@ import * as L from 'leaflet';
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { GeoJsonObject } from 'geojson';
 import Cluster from "react-leaflet-cluster";
-import apiClient from "@/lib/apiClient"; // ✅ Import API Client
+import apiClient from "@/lib/apiClient";
 import { useMap } from "react-leaflet";
 import { mapLayers } from "@/components/constants";
 import SidebarItems from "@/components/nav-pages/dashboard/SidebarItems";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
-/*
-// Define a custom GeoJSON type with properties
-interface CustomGeoJSON extends GeoJsonObject {
-    properties?: {
-        name?: string;
-        type?: string;
-        bounds?: [L.LatLngExpression, L.LatLngExpression]; // Array of two LatLngExpression values
-        imageUrl?: string;
-    };
-*/
 const SearchControl = dynamic(() => import("@/components/nav-pages/dashboard/db_functions"), { ssr: false });
 const MapBounds = dynamic(() => import("@/components/nav-pages/dashboard/MapBounds"), { ssr: false });
 
@@ -33,65 +23,28 @@ interface MapProps {
     geoJSONDataList?: GeoJsonObject[];
 }
 
-// Component to handle GeoTIFF overlay
 interface GeoTIFFOverlayProps {
     geoTIFFOverlay: L.ImageOverlay | null;
+    onRemove: () => void; // Add onRemove prop
 }
 
-const GeoTIFFOverlay: React.FC<GeoTIFFOverlayProps> = ({ geoTIFFOverlay }) => {
+const GeoTIFFOverlay: React.FC<GeoTIFFOverlayProps> = ({ geoTIFFOverlay, onRemove }) => {
     const map = useMap();
 
     useEffect(() => {
         if (geoTIFFOverlay) {
             geoTIFFOverlay.addTo(map);
-
-            // Fit the map to the bounds of the overlay
             map.fitBounds(geoTIFFOverlay.getBounds());
 
-            // Cleanup function to remove the overlay when the component unmounts
             return () => {
                 geoTIFFOverlay.remove();
             };
         }
     }, [geoTIFFOverlay, map]);
 
-    return null; // This component doesn't render anything
-};
-
-/*
-// Component to handle map bounds
-const MapBounds: React.FC<{ geoJSONDataList: GeoJsonObject[] }> = ({ geoJSONDataList }) => {
-    const map = useMap();
-
-    useEffect(() => {
-        if (!geoJSONDataList.length || !map) return;
-
-        const allBounds = geoJSONDataList
-            .map((geoJSON) => {
-                if (geoJSON.properties?.bounds) {
-                    // Convert bounds to LatLngBounds
-                    return L.latLngBounds(geoJSON.properties.bounds);
-                }
-                const layer = L.geoJSON(geoJSON);
-                return layer.getBounds();
-            })
-            .filter((bounds) => bounds.isValid());
-
-        if (allBounds.length === 0) return;
-
-        const mergedBounds = allBounds.reduce((acc, bounds) => acc.extend(bounds), allBounds[0]);
-
-        if (mergedBounds.isValid()) {
-            map.fitBounds(mergedBounds);
-        }
-    }, [map, geoJSONDataList]);
-
     return null;
 };
 
-*/
-
-// Main DashboardMap component
 const DashboardMap: React.FC = () => {
     const [geoJSONDataList, setGeoJSONDataList] = useState<GeoJsonObject[]>([]);
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -100,8 +53,6 @@ const DashboardMap: React.FC = () => {
         mapLayers.find((layer) => layer.default)?.url || mapLayers[0].url
     );
     const [geoTIFFOverlay, setGeoTIFFOverlay] = useState<L.ImageOverlay | null>(null);
-
-    
     const [selectedProperties, setSelectedProperties] = useState<Record<string, string | number | boolean> | null>(null);
 
     interface ModelInput {
@@ -112,12 +63,12 @@ const DashboardMap: React.FC = () => {
         data_link: string;
         created_at: string;
     }
-    
+
     const fetchModels = useCallback(async () => {
         try {
             const response = await apiClient.get<ModelInput[]>("/inputs/");
             console.log("✅ Fetched Models:", response.data);
-    
+
             const geoJSONModels = await Promise.all(
                 response.data
                     .filter((model) => model.file_type === "json" || model.file_type === "geojson")
@@ -128,23 +79,26 @@ const DashboardMap: React.FC = () => {
                             return await res.json() as GeoJsonObject;
                         } catch (error) {
                             console.error("❌ Error fetching GeoJSON:", error);
-                            return null; 
+                            return null;
                         }
                     })
             );
-    
+
             setGeoJSONDataList(geoJSONModels.filter((geoJSON): geoJSON is GeoJsonObject => geoJSON !== null));
-    
         } catch (error) {
             console.error("❌ Error fetching models:", error);
         }
     }, []);
-    
-    // ✅ **Fetch Models on Mount**
+
     useEffect(() => {
         fetchModels();
-    }, [fetchModels]); 
-    
+    }, [fetchModels]);
+
+    // Function to handle removal of the image overlay
+    const handleRemoveImage = () => {
+        setGeoTIFFOverlay(null); // Clear the image overlay
+    };
+
     return (
         <div className="flex h-[calc(100vh-5rem)] overflow-hidden w-full">
             {/* Sidebar */}
@@ -155,15 +109,12 @@ const DashboardMap: React.FC = () => {
 
                 {sidebarOpen && (
                     <Box className="mt-2">
-                        
-                  
-
-                        {/* ✅ Pass `fetchModels` to SidebarItems */}
                         <SidebarItems 
                             geoJSONDataList={geoJSONDataList} 
                             setGeoJSONDataList={setGeoJSONDataList} 
                             setGeoTIFFOverlay={setGeoTIFFOverlay}
                             fetchModels={fetchModels}  
+                            onRemoveImage={handleRemoveImage} // Pass the removal handler
                         />
                     </Box>
                 )}
@@ -180,11 +131,8 @@ const DashboardMap: React.FC = () => {
                         <GeoJSON key={index} data={geoJSONData} />
                     ))}
 
-                    {/* Add the GeoTIFFOverlay component */}
-                    <GeoTIFFOverlay geoTIFFOverlay={geoTIFFOverlay} />
+                    <GeoTIFFOverlay geoTIFFOverlay={geoTIFFOverlay} onRemove={handleRemoveImage} />
 
-                    {/* Add the MapBounds component */}
-                    <MapBounds geoJSONDataList={geoJSONDataList} />
                     <Cluster zoomToBoundsOnClick={false}>
                         {geoJSONDataList.map((geoJSONData, index) => (
                             <GeoJSON
@@ -210,7 +158,6 @@ const DashboardMap: React.FC = () => {
                                 onEachFeature={(feature, layer) => {
                                     if (!feature || !feature.properties) return;
 
-                                    // Tooltip Content
                                     const tooltipContent = Object.entries(feature.properties)
                                         .map(([key, value]) => `<div style="margin-bottom:4px;"><strong>${key}:</strong> ${value}</div>`)
                                         .join("");
@@ -222,7 +169,6 @@ const DashboardMap: React.FC = () => {
                                         sticky: true,
                                     });
 
-                                    // Open Tooltip on Hover
                                     layer.on("mouseover", () => layer.openTooltip());
                                     layer.on("mouseout", () => layer.closeTooltip());
 
@@ -259,8 +205,7 @@ const DashboardMap: React.FC = () => {
 
                 {/* Feature Details Popup */}
                 {selectedProperties && (
-                    <div className="absolute top-0 right-0 m-4 p-4 bg-white dark:bg-[hsl(279,100%,3.9%)] shadow-lg border 
-                    rounded z-[1001] max-h-[calc(100vh-5rem)] overflow-y-auto">
+                    <div className="absolute top-0 right-0 m-4 p-4 bg-white dark:bg-[hsl(279,100%,3.9%)] shadow-lg border rounded z-[1001] max-h-[calc(100vh-5rem)] overflow-y-auto">
                         <h3 className="text-base font-bold underline underline-offset-1 ">Feature Details</h3>
                         <ul>
                             {Object.entries(selectedProperties).map(([key, value]) => (
