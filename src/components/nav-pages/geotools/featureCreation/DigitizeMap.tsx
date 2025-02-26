@@ -21,6 +21,7 @@ interface Feature {
     type: string;
     latlngs: L.LatLng[] | L.LatLng | L.LatLng[][];
     name: string;
+    comment?: string;
 }
 
 interface CreatedEvent {
@@ -64,6 +65,7 @@ const DigitizeMap = () => {
                 type: layerType,
                 latlngs: layer.getLatLngs!(),
                 name: "Unnamed Feature",
+                comment: "",
             };
         } else if (layerType === "marker") {
             newFeature = {
@@ -71,6 +73,7 @@ const DigitizeMap = () => {
                 type: layerType,
                 latlngs: layer.getLatLng!(),
                 name: "Unnamed Feature",
+                comment: "",
             };
         } else if (layerType === "polyline") {
             newFeature = {
@@ -78,6 +81,7 @@ const DigitizeMap = () => {
                 type: "polyline",
                 latlngs: layer.getLatLngs!(),
                 name: "Unnamed Line",
+                comment: "",
             };
         }
 
@@ -96,7 +100,11 @@ const DigitizeMap = () => {
             type: "FeatureCollection",
             features: features.map(feature => ({
                 type: "Feature",
-                properties: { name: feature.name, type: feature.type },
+                properties: { 
+                    name: feature.name, 
+                    type: feature.type,
+                    comment: feature.comment || ""  
+                },
                 geometry: {
                     type: feature.type === "marker"
                         ? "Point"
@@ -112,10 +120,11 @@ const DigitizeMap = () => {
                 },
             })),
         };
-
+    
         const blob = new Blob([JSON.stringify(geoJSON, null, 2)], { type: "application/json" });
         saveAs(blob, "digitized_features.geojson");
     };
+    
 
 
     return (
@@ -123,25 +132,41 @@ const DigitizeMap = () => {
             <div className="w-3/12 p-4 bg-white dark:bg-[hsl(279,100%,3.9%)] border-r shadow-md overflow-y-auto">
                 <h3 className="text-lg font-bold">Digitized Features</h3>
                 {features.length > 0 ? (
-                    <ul>
-                        {features.map((feature) => (
-                            <li key={feature.id} className="flex items-center space-x-2">
-                                <input
-                                    type="text"
-                                    className="border p-1 text-xs"
-                                    value={feature.name}
-                                    onChange={(e) => setFeatures(features.map(f => f.id === feature.id ? { ...f, name: e.target.value } : f))}
-                                />
-                                <span className="text-sm text-gray-600">({feature.type})</span>
-                                <button onClick={() => deleteFeature(feature.id)} className="ml-2 px-2 py-1 bg-red-600 text-white text-xs rounded">
-                                    Delete
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className="text-gray-500">No features added.</p>
-                )}
+                <ul>
+                    {features.map((feature) => (
+                        <li key={feature.id} className="flex flex-col space-y-2 border-b pb-2">
+                            <input
+                                type="text"
+                                className="border p-1 text-xs"
+                                value={feature.name}
+                                onChange={(e) =>
+                                    setFeatures(features.map(f =>
+                                        f.id === feature.id ? { ...f, name: e.target.value } : f
+                                    ))
+                                }
+                            />
+                            <textarea
+                                className="border p-1 text-xs"
+                                placeholder="Add a comment (optional)"
+                                value={feature.comment}
+                                onChange={(e) =>
+                                    setFeatures(features.map(f =>
+                                        f.id === feature.id ? { ...f, comment: e.target.value } : f
+                                    ))
+                                }
+                            />
+                            <span className="text-sm text-gray-600">({feature.type})</span>
+                            <button onClick={() => deleteFeature(feature.id)} className="ml-2 px-2 py-1 bg-red-600 text-white text-xs rounded">
+                                Delete
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="text-gray-500">No features added.</p>
+            )}
+
+                        
                 <button onClick={saveFeaturesAsGeoJSON} className="mt-2 mb-8 px-4 py-2 bg-green-600 text-white rounded text-sm">
                     Download as GeoJSON
                 </button>
