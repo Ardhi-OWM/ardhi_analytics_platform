@@ -1,11 +1,9 @@
 "use client";
 import { useState } from "react";
 import { Link } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
 import * as GeoTIFF from "geotiff";
 import * as jpeg from "jpeg-js";
 import * as L from "leaflet";
-import apiClient from "@/lib/apiClient";
 import { GeoJsonObject, FeatureCollection, Feature } from "geojson";
 import * as toGeoJSON from "@tmcw/togeojson"; 
 import Papa from "papaparse"; 
@@ -14,23 +12,19 @@ import { Input } from "@/components/ui/input";
 import SubscriptionForm from "./SubscriptionForm";
 import FileUpload from "@/components/nav-pages/dashboard/FileUpload";
 
-interface ModelInput {
-    user_id: string;
-    input_type: "API" | "Model" | "Dataset";
-    data_link: string;
-}
+
 
 interface SidebarItemsProps {
     geoJSONDataList: GeoJsonObject[];
     setGeoJSONDataList: React.Dispatch<React.SetStateAction<GeoJsonObject[]>>;
     setGeoTIFFOverlay: React.Dispatch<React.SetStateAction<L.ImageOverlay | null>>;
-    fetchModels: () => Promise<void>;
+    // fetchModels: () => Promise<void>;
     onRemoveImage: () => void; // Add onRemoveImage prop
 }
 
 type TableRow = Record<string, string | number | boolean | null>;
 
-const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSONDataList, setGeoTIFFOverlay, fetchModels, onRemoveImage }) => {
+const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSONDataList, setGeoTIFFOverlay,  onRemoveImage }) => {
    
     const [dataUrl, setDataUrl] = useState("");
  
