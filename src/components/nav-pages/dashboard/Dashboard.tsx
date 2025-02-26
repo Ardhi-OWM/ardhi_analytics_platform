@@ -25,10 +25,10 @@ interface MapProps {
 
 interface GeoTIFFOverlayProps {
     geoTIFFOverlay: L.ImageOverlay | null;
-    onRemove: () => void; // Add onRemove prop
+    
 }
 
-const GeoTIFFOverlay: React.FC<GeoTIFFOverlayProps> = ({ geoTIFFOverlay, onRemove }) => {
+const GeoTIFFOverlay: React.FC<GeoTIFFOverlayProps> = ({ geoTIFFOverlay }) => {
     const map = useMap();
 
     useEffect(() => {
@@ -131,7 +131,7 @@ const DashboardMap: React.FC<MapProps> = () => {
                         <GeoJSON key={index} data={geoJSONData} />
                     ))}
 
-                    <GeoTIFFOverlay geoTIFFOverlay={geoTIFFOverlay} onRemove={handleRemoveImage} />
+                    <GeoTIFFOverlay geoTIFFOverlay={geoTIFFOverlay} />
 
                     <Cluster zoomToBoundsOnClick={false}>
                         {geoJSONDataList.map((geoJSONData, index) => (
