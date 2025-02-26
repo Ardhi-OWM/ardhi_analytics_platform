@@ -332,7 +332,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
     
     return (
         <div className="flex flex-col space-y-8 mx-2">
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
                 <label htmlFor="input-type" className="text-sm font-medium flex flex-row space-x-2">
                     <MousePointerClick className="text-green-500 ml-2 rotate-90" />
                     <p className="uppercase font-bold">Select Input Type</p>
@@ -370,7 +370,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                         {isSubmitting ? "Submitting..." : "Submit Service"}
                     </button>
                 </div>
-            </div>
+            </div> */}
 
             <div className="my-4">
                 <label htmlFor="data-link" className="text-sm font-medium flex flex-row space-x-2">
