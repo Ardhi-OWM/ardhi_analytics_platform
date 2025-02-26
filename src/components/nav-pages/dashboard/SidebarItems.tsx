@@ -2,14 +2,14 @@
 import { useState } from "react";
 import { Link, MousePointerClick } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import apiClient from "@/lib/apiClient"; // Centralized API client
-import { GeoJsonObject, FeatureCollection, Feature} from "geojson";
-// import proj4 from "proj4";
-// import { toWgs84 } from "@turf/projection";
+import * as GeoTIFF from "geotiff";
+import * as jpeg from "jpeg-js";
+import * as L from "leaflet";
+import apiClient from "@/lib/apiClient";
+import { GeoJsonObject, FeatureCollection, Feature } from "geojson";
 import * as toGeoJSON from "@tmcw/togeojson"; 
 import Papa from "papaparse"; 
 import * as XLSX from "xlsx";
-
 import { Input } from "@/components/ui/input";
 import SubscriptionForm from "./SubscriptionForm";
 import FileUpload from "@/components/nav-pages/dashboard/FileUpload";
@@ -23,10 +23,14 @@ interface ModelInput {
 interface SidebarItemsProps {
     geoJSONDataList: GeoJsonObject[];
     setGeoJSONDataList: React.Dispatch<React.SetStateAction<GeoJsonObject[]>>;
+    setGeoTIFFOverlay: React.Dispatch<React.SetStateAction<L.ImageOverlay | null>>;
     fetchModels: () => Promise<void>;
+    onRemoveImage: () => void; // Add onRemoveImage prop
 }
 
-const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSONDataList, fetchModels }) => {
+type TableRow = Record<string, string | number | boolean | null>;
+
+const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSONDataList, setGeoTIFFOverlay, fetchModels, onRemoveImage }) => {
     const [inputType, setInputType] = useState<"api" | "ml-model" | "dataset">("api");
     const [inputValue, setInputValue] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -89,8 +93,68 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
     };
 
     const { label, placeholder } = getLabelAndPlaceholder(inputType);
-    
-    type TableRow = Record<string, string | number | boolean | null>;
+
+    const processGeoTIFF = async (file: File | ArrayBuffer, fileName: string) => {
+        try {
+            const arrayBuffer = file instanceof File ? await file.arrayBuffer() : file;
+            const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
+            const image = await tiff.getImage();
+            const raster = await image.readRasters();
+
+            const width = raster.width;
+            const height = raster.height;
+
+            if (raster.length < 3) {
+                console.error("GeoTIFF does not have enough bands for RGB color.");
+                return null;
+            }
+
+            const red = raster[0];
+            const green = raster[1];
+            const blue = raster[2];
+
+            const rgbData = new Uint8Array(width * height * 4);
+            for (let i = 0; i < width * height; i++) {
+                rgbData[i * 4] = red[i];
+                rgbData[i * 4 + 1] = green[i];
+                rgbData[i * 4 + 2] = blue[i];
+                rgbData[i * 4 + 3] = 255;
+            }
+
+            const rawImageData = {
+                data: rgbData,
+                width,
+                height,
+            };
+
+            const jpegImageData = jpeg.encode(rawImageData, 100);
+            const blob = new Blob([jpegImageData.data], { type: "image/jpeg" });
+            const imageUrl = URL.createObjectURL(blob);
+
+            const bbox = image.getBoundingBox();
+            const bounds: L.LatLngBoundsExpression = [
+                [bbox[1], bbox[0]],
+                [bbox[3], bbox[2]],
+            ];
+
+            const overlay = L.imageOverlay(imageUrl, bounds);
+            setGeoTIFFOverlay(overlay);
+
+            return {
+                type: "FeatureCollection",
+                features: [],
+                properties: {
+                    name: fileName,
+                    type: "GeoTIFF",
+                    bounds,
+                    imageUrl,
+                },
+            } as GeoJsonObject;
+        } catch (error) {
+            console.error("Error processing GeoTIFF:", error);
+            return null;
+        }
+    };
 
     const handleFileUpload = async (uploadedFile: File) => {
         const fileExtension = uploadedFile.name.split(".").pop()?.toLowerCase();
@@ -142,8 +206,38 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             } catch (error) {
                 console.error("❌ Error parsing Excel file:", error);
             }
+        } else if (fileExtension === "tif" || fileExtension === "tiff") {
+            const geoJSON = await processGeoTIFF(uploadedFile, uploadedFile.name);
+            if (geoJSON) {
+                setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
+            }
         } else {
             console.log("❌ Unsupported file format");
+        }
+    };
+
+    const handleUrlLoad = async () => {
+        try {
+            const response = await fetch(dataUrl);
+            if (!response.ok) {
+                throw new Error("Failed to fetch data from URL");
+            }
+
+            if (dataUrl.endsWith(".geojson")) {
+                const geoJSON = (await response.json()) as GeoJsonObject;
+                setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
+                console.log("Loaded GeoJSON from URL:", geoJSON);
+            } else if (dataUrl.endsWith(".tif") || dataUrl.endsWith(".tiff")) {
+                const arrayBuffer = await response.arrayBuffer();
+                const geoJSON = await processGeoTIFF(arrayBuffer, dataUrl);
+                if (geoJSON) {
+                    setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
+                }
+            } else {
+                console.log("Unsupported file format");
+            }
+        } catch (error) {
+            console.error("Error loading data from URL:", error);
         }
     };
 
@@ -164,9 +258,9 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                     if (typeof rawCoords === "string") {
                         rawCoords = JSON.parse(`[${rawCoords}]`);
                     }
-    
+
                     console.log(`✅ Parsed MultiPolygon coordinates from ${source}:`, rawCoords);
-    
+
                     if (!Array.isArray(rawCoords)) {
                         throw new Error("Coordinates are not an array");
                     }
@@ -195,9 +289,8 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                         filteredCoords.push([currentRing]);
                     }
 
-    
                     console.log(`✅ Final MultiPolygon Structure from ${source}:`, filteredCoords);
-    
+
                     features.push({
                         type: "Feature",
                         geometry: {
@@ -220,9 +313,9 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                     if (typeof rawCoords === "string") {
                         rawCoords = JSON.parse(`[${rawCoords}]`);
                     }
-    
+
                     console.log(`✅ Parsed Polygon coordinates from ${source}:`, rawCoords);
-    
+
                     if (!Array.isArray(rawCoords)) {
                         throw new Error("Coordinates are not an array");
                     }
@@ -251,9 +344,9 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                     if (currentRing.length > 0) {
                         polygonCoords.push(currentRing);
                     }
-    
+
                     console.log(`✅ Final Polygon Structure from ${source}:`, polygonCoords);
-    
+
                     features.push({
                         type: "Feature",
                         geometry: {
@@ -301,35 +394,11 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
         console.log(`✅ Uploaded ${source} as GeoJSON:`, geoJSON);
     };
 
-    // const transformGeoJSON = (geoJSON: FeatureCollection, sourceCrs: string): FeatureCollection => {
-    //     try {
-    //         console.log("Transforming from CRS:", sourceCrs); 
-    //         proj4.defs(sourceCrs, `+proj=utm +zone=33 +datum=WGS84 +units=m +no_defs`);
-    
-    //         return toWgs84(geoJSON, { mutate: true });
-    //     } catch (error) {
-    //         console.error("Error transforming CRS:", error);
-    //         return geoJSON;
-    //     }
-    // };
-    
-
-    const handleUrlLoad = async () => {
-        try {
-            const response = await fetch(dataUrl);
-            if (!response.ok) {
-                throw new Error("Failed to fetch GeoJSON from URL");
-            }
-            const geoJSON = (await response.json()) as GeoJsonObject;
-            setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
-            console.log("Loaded GeoJSON from URL:", geoJSON);
-        } catch (error) {
-            console.error("Error loading GeoJSON from URL:", error);
-        }
+    const handleRemoveDataset = (index: number) => {
+        setGeoJSONDataList((prevData) => prevData.filter((_, i) => i !== index));
+        onRemoveImage(); // Call the onRemoveImage function to remove the image overlay
     };
 
-    
-    
     return (
         <div className="flex flex-col space-y-8 mx-2">
             {/* <div className="space-y-4">
@@ -372,6 +441,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                 </div>
             </div> */}
 
+            {/* Link to visualize data */}
             <div className="my-4">
                 <label htmlFor="data-link" className="text-sm font-medium flex flex-row space-x-2">
                     <Link className="text-green-300 ml-1" />
@@ -395,6 +465,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                 </button>
             </div>
 
+            {/* Uploaded Datasets */}
             <div>
                 <h1 className="text-sm font-bold">Uploaded Datasets</h1>
                 {geoJSONDataList.length === 0 && <p className="text-sm">No datasets uploaded yet.</p>}
@@ -404,7 +475,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                             <span className="text-sm ibm-plex-mono-medium-italic">Dataset {index + 1}</span>
                             <button
                                 className="bg-red-500 px-3 rounded hover:bg-red-600 text-sm"
-                                onClick={() => setGeoJSONDataList((prevData) => prevData.filter((_, i) => i !== index))}
+                                onClick={() => handleRemoveDataset(index)} // Use the new handler
                             >
                                 Remove
                             </button>
@@ -413,6 +484,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                 </ul>
             </div>
 
+            {/* Newsletter subscription */}
             <div className="space-y-4 mx-2">
                 <SubscriptionForm />
             </div>
