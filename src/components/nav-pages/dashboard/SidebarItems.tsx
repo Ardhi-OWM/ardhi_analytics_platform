@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Link, MousePointerClick } from "lucide-react";
+import { Link } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import * as GeoTIFF from "geotiff";
 import * as jpeg from "jpeg-js";
@@ -31,68 +31,9 @@ interface SidebarItemsProps {
 type TableRow = Record<string, string | number | boolean | null>;
 
 const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSONDataList, setGeoTIFFOverlay, fetchModels, onRemoveImage }) => {
-    const [inputType, setInputType] = useState<"api" | "ml-model" | "dataset">("api");
-    const [inputValue, setInputValue] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
+   
     const [dataUrl, setDataUrl] = useState("");
-    const { user } = useUser();
-
-    const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-        setInputType(e.target.value as "api" | "ml-model" | "dataset");
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-        setInputValue(e.target.value);
-
-    const handleSubmit = async () => {
-        if (!user) {
-            alert("You need to be logged in to add a service");
-            return;
-        }
-
-        const formattedInputType: ModelInput["input_type"] =
-            inputType === "api" ? "API" : inputType === "ml-model" ? "Model" : "Dataset";
-
-        const payload: ModelInput = {
-            user_id: user.id,
-            input_type: formattedInputType,
-            data_link: inputValue,
-        };
-
-        console.log("🔹 Payload Sent:", payload);
-
-        try {
-            setIsSubmitting(true);
-            const response = await apiClient.post<{ success: boolean }>("/inputs/", payload);
-            console.log("✅ Response:", response.data);
-            alert("Service added successfully!");
-            setInputValue("");
-
-            await fetchModels();
-        } catch (error: unknown) {
-            console.error("❌ Error adding service:", error);
-
-            if (error instanceof Error) {
-                alert(`Failed to add service: ${error.message}`);
-            } else {
-                alert("Failed to add service. Please try again.");
-            }
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const getLabelAndPlaceholder = (type: string) => {
-        switch (type) {
-            case "api":
-                return { label: "Enter API", placeholder: "API Endpoint" };
-            case "ml-model":
-                return { label: "Enter Link to the Model", placeholder: "Model URL" };
-            default:
-                return { label: "Enter Link to Dataset", placeholder: "Dataset URL" };
-        }
-    };
-
-    const { label, placeholder } = getLabelAndPlaceholder(inputType);
+ 
 
     const processGeoTIFF = async (file: File | ArrayBuffer, fileName: string) => {
         try {
@@ -401,45 +342,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
 
     return (
         <div className="flex flex-col space-y-8 mx-2">
-            {/* <div className="space-y-4">
-                <label htmlFor="input-type" className="text-sm font-medium flex flex-row space-x-2">
-                    <MousePointerClick className="text-green-500 ml-2 rotate-90" />
-                    <p className="uppercase font-bold">Select Input Type</p>
-                </label>
-                <select
-                    id="input-type"
-                    className="block w-full px-2 border border-purple-400/[.25] rounded bg-background focus:border-purple-500 text-sm"
-                    value={inputType}
-                    onChange={handleTypeChange}
-                >
-                    <option value="api">API</option>
-                    <option value="ml-model">Link to Model</option>
-                    <option value="dataset">Link to Dataset</option>
-                </select>
-                <div>
-                    <label htmlFor="dynamic-input" className="block text-xs font-medium">
-                        {label}
-                    </label>
-                    <Input
-                        id="dynamic-input"
-                        type="text"
-                        placeholder={placeholder}
-                        value={inputValue}
-                        onChange={handleInputChange}
-                        className="border-purple-400/[.25] ibm-plex-mono-regular-italic"
-                        aria-label={label}
-                    />
-                    <button
-                        onClick={handleSubmit}
-                        disabled={isSubmitting}
-                        className={`mt-4 px-4 py-1 rounded ${
-                            isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-600"
-                        }`}
-                    >
-                        {isSubmitting ? "Submitting..." : "Submit Service"}
-                    </button>
-                </div>
-            </div> */}
+         
 
             {/* Link to visualize data */}
             <div className="my-4">
