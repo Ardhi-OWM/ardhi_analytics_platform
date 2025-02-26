@@ -10,7 +10,6 @@ import * as L from 'leaflet';
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { GeoJsonObject } from 'geojson';
 import Cluster from "react-leaflet-cluster";
-import apiClient from "@/lib/apiClient";
 import { useMap } from "react-leaflet";
 import { mapLayers } from "@/components/constants";
 import SidebarItems from "@/components/nav-pages/dashboard/SidebarItems";
@@ -55,45 +54,6 @@ const DashboardMap: React.FC<MapProps> = () => {
     const [geoTIFFOverlay, setGeoTIFFOverlay] = useState<L.ImageOverlay | null>(null);
     const [selectedProperties, setSelectedProperties] = useState<Record<string, string | number | boolean> | null>(null);
 
-    interface ModelInput {
-        id: number;
-        user_id: string;
-        input_type: string;
-        file_type: string;
-        data_link: string;
-        created_at: string;
-    }
-
-    const fetchModels = useCallback(async () => {
-        try {
-            const response = await apiClient.get<ModelInput[]>("/inputs/");
-            console.log("✅ Fetched Models:", response.data);
-
-            const geoJSONModels = await Promise.all(
-                response.data
-                    .filter((model) => model.file_type === "json" || model.file_type === "geojson")
-                    .map(async (model) => {
-                        try {
-                            const res = await fetch(model.data_link);
-                            if (!res.ok) throw new Error("Failed to fetch model data");
-                            return await res.json() as GeoJsonObject;
-                        } catch (error) {
-                            console.error("❌ Error fetching GeoJSON:", error);
-                            return null;
-                        }
-                    })
-            );
-
-            setGeoJSONDataList(geoJSONModels.filter((geoJSON): geoJSON is GeoJsonObject => geoJSON !== null));
-        } catch (error) {
-            console.error("❌ Error fetching models:", error);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchModels();
-    }, [fetchModels]);
-
     // Function to handle removal of the image overlay
     const handleRemoveImage = () => {
         setGeoTIFFOverlay(null); // Clear the image overlay
@@ -113,7 +73,6 @@ const DashboardMap: React.FC<MapProps> = () => {
                             geoJSONDataList={geoJSONDataList} 
                             setGeoJSONDataList={setGeoJSONDataList} 
                             setGeoTIFFOverlay={setGeoTIFFOverlay}
-                            fetchModels={fetchModels}  
                             onRemoveImage={handleRemoveImage} // Pass the removal handler
                         />
                     </Box>

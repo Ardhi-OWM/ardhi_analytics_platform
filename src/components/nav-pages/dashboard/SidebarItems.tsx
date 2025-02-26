@@ -18,7 +18,6 @@ interface SidebarItemsProps {
     geoJSONDataList: GeoJsonObject[];
     setGeoJSONDataList: React.Dispatch<React.SetStateAction<GeoJsonObject[]>>;
     setGeoTIFFOverlay: React.Dispatch<React.SetStateAction<L.ImageOverlay | null>>;
-    // fetchModels: () => Promise<void>;
     onRemoveImage: () => void; // Add onRemoveImage prop
 }
 
