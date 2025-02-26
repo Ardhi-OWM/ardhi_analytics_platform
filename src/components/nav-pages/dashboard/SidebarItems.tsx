@@ -28,6 +28,7 @@ interface SidebarItemsProps {
     onRemoveImage: () => void; // Add onRemoveImage prop
 }
 
+type TableRow = Record<string, string | number | boolean | null>;
 
 const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSONDataList, setGeoTIFFOverlay, fetchModels, onRemoveImage }) => {
     const [inputType, setInputType] = useState<"api" | "ml-model" | "dataset">("api");
@@ -92,9 +93,6 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
     };
 
     const { label, placeholder } = getLabelAndPlaceholder(inputType);
-
-
-    type TableRow = Record<string, string | number | boolean | null>;
 
     const processGeoTIFF = async (file: File | ArrayBuffer, fileName: string) => {
         try {
@@ -400,9 +398,6 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
         setGeoJSONDataList((prevData) => prevData.filter((_, i) => i !== index));
         onRemoveImage(); // Call the onRemoveImage function to remove the image overlay
     };
-
-
-    
 
     return (
         <div className="flex flex-col space-y-8 mx-2">
