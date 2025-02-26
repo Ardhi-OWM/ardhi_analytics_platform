@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { PanelLeftOpen, PanelRightOpen, ChevronDown, ChevronUp } from "lucide-react";
 import IconButton from "@mui/material/IconButton";
