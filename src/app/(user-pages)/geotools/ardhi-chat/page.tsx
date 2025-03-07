@@ -1,6 +1,9 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Send, Plus, MessageSquare, Paperclip } from "lucide-react";
+import * as toGeoJSON from "@tmcw/togeojson";
+import * as XLSX from "xlsx";
+import { FeatureCollection } from "geojson";
 
 interface ChatMessage {
   text: string;
@@ -14,21 +17,12 @@ interface ChatHistory {
   createdAt: Date;
 }
 
-// Add these imports at the top
-import { GeoJsonObject, FeatureCollection } from "geojson";
-import * as GeoTIFF from "geotiff";
-import * as toGeoJSON from "@tmcw/togeojson";
-import Papa from "papaparse";
-import * as XLSX from "xlsx";
-
 const ArdhiChat: React.FC = () => {
-  // Add new state for file
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
-  // Initialize messages with useEffect to avoid hydration mismatch
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   // Add initialization effect
@@ -67,12 +61,16 @@ const ArdhiChat: React.FC = () => {
     if (chatHistory.length === 0) {
       createNewChat();
     }
-  }, [createNewChat]);
+  }, [createNewChat, chatHistory.length]);
+
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
   const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   // Function to fetch AI response with retry on 429 errors
   const fetchAIResponse = async (
@@ -179,11 +177,6 @@ const ArdhiChat: React.FC = () => {
     fetchAIResponse(input);
   };
 
-  // Auto-scroll to the latest message
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   // Add new state for file handling
   const [uploadedFiles, setUploadedFiles] = useState<
     { name: string; type: string }[]
@@ -228,8 +221,8 @@ const ArdhiChat: React.FC = () => {
       setMessages((prev) => [...prev, { text: messageText, sender: "user" }]);
 
       // Store file info
-      setUploadedFiles((prev) => [
-        ...prev,
+      setUploadedFiles([
+        ...uploadedFiles,
         { name: file.name, type: fileExtension || "unknown" },
       ]);
 
@@ -328,7 +321,10 @@ const ArdhiChat: React.FC = () => {
   return (
     <div className="w-full h-[88dvh] mt-18 flex bg-gray-100">
       {/* Sidebar */}
-      <div className="w-64 bg-gray-900 text-white h-full flex flex-col" suppressHydrationWarning>
+      <div
+        className="w-64 bg-gray-900 text-white h-full flex flex-col"
+        suppressHydrationWarning
+      >
         {/* New Chat Button */}
         <button
           onClick={createNewChat}
@@ -373,7 +369,9 @@ const ArdhiChat: React.FC = () => {
           <div className="relative">
             {selectedFile && (
               <div className="absolute -top-12 left-0 bg-gray-100 p-2 rounded-lg flex items-center gap-2">
-                <span className="text-sm text-gray-600">{selectedFile.name}</span>
+                <span className="text-sm text-gray-600">
+                  {selectedFile.name}
+                </span>
                 <button
                   onClick={() => {
                     setSelectedFile(null);

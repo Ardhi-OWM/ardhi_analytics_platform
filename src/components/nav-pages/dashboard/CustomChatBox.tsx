@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { CaptionsOff, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { env } from "@/env";
 
 interface Message {
@@ -32,9 +32,11 @@ const CustomChatBox = () => {
 
   const fetchAIResponse = async (userInput: string) => {
     const apiKey = env.NEXT_PUBLIC_OPENAI_API_KEY;
-    
+
     if (!apiKey) {
-      throw new Error("OpenAI API key is missing. Please check your environment variables.");
+      throw new Error(
+        "OpenAI API key is missing. Please check your environment variables."
+      );
     }
 
     try {
