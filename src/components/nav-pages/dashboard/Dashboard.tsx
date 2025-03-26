@@ -86,10 +86,7 @@ const DashboardMap: React.FC<MapProps> = () => {
                     <SearchControl />
                     <TileLayer key={activeLayer} url={activeLayer} />
 
-                    {geoJSONDataList.map((geoJSONData, index) => (
-                        <GeoJSON key={index} data={geoJSONData} />
-                    ))}
-
+                
                     <GeoTIFFOverlay geoTIFFOverlay={geoTIFFOverlay} />
 
                     <Cluster zoomToBoundsOnClick={false}>

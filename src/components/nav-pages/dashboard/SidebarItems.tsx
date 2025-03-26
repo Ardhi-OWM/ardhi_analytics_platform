@@ -180,14 +180,14 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             console.error(`❌ ${source} file is empty`);
             return;
         }
-
+    
         const features: Feature[] = [];
-
+    
         rows.forEach((row) => {
             if (row.geometry === "MultiPolygon" && row.coordinates) {
                 try {
                     console.log(`🔹 Raw MultiPolygon Coordinates from ${source}:`, row.coordinates);
-
+    
                     let rawCoords = row.coordinates;
                     if (typeof rawCoords === "string") {
                         rawCoords = JSON.parse(`[${rawCoords}]`);
@@ -198,19 +198,19 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                     if (!Array.isArray(rawCoords)) {
                         throw new Error("Coordinates are not an array");
                     }
-
+    
                     const filteredCoords: [number, number][][][] = [];
                     const currentRing: [number, number][] = [];
-
+    
                     for (let i = 0; i < rawCoords.length; i += 3) {
                         if (rawCoords[i + 1] !== undefined) {
                             let lng = parseFloat(rawCoords[i] as string);
                             let lat = parseFloat(rawCoords[i + 1] as string);
-
+    
                             if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
                                 [lat, lng] = [lng, lat];
                             }
-
+    
                             if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
                                 currentRing.push([lng, lat]);
                             } else {
@@ -218,7 +218,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                             }
                         }
                     }
-
+    
                     if (currentRing.length > 0) {
                         filteredCoords.push([currentRing]);
                     }
@@ -233,7 +233,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                         },
                         properties: { 
                             ...row, 
-                            coordinates: undefined, 
+                            coordinates: undefined,
                         },
                     });
                 } catch (error) {
@@ -242,7 +242,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             } else if (row.geometry === "Polygon" && row.coordinates) {
                 try {
                     console.log(`🔹 Raw Polygon Coordinates from ${source}:`, row.coordinates);
-
+    
                     let rawCoords = row.coordinates;
                     if (typeof rawCoords === "string") {
                         rawCoords = JSON.parse(`[${rawCoords}]`);
@@ -253,20 +253,20 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                     if (!Array.isArray(rawCoords)) {
                         throw new Error("Coordinates are not an array");
                     }
-
+    
                     const polygonCoords: [number, number][][] = [];
                     const currentRing: [number, number][] = [];
-
+    
                     for (let i = 0; i < rawCoords.length; i += 3) {
                         if (rawCoords[i + 1] !== undefined) {
                             let lng = parseFloat(rawCoords[i] as string);
                             let lat = parseFloat(rawCoords[i + 1] as string);
-
+    
                             if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
                                 console.warn(`🚨 Invalid coordinate detected: [${lng}, ${lat}]. Attempting to swap...`);
                                 [lat, lng] = [lng, lat];
                             }
-
+    
                             if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
                                 currentRing.push([lng, lat]);
                             } else {
@@ -274,7 +274,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                             }
                         }
                     }
-
+    
                     if (currentRing.length > 0) {
                         polygonCoords.push(currentRing);
                     }
@@ -289,7 +289,7 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
                         },
                         properties: { 
                             ...row, 
-                            coordinates: undefined, 
+                            coordinates: undefined,
                         },
                     });
                 } catch (error) {
@@ -298,39 +298,52 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ geoJSONDataList, setGeoJSON
             } else if (row.latitude && row.longitude) {
                 let lng = parseFloat(row.longitude as string);
                 let lat = parseFloat(row.latitude as string);
-
+    
+                if (isNaN(lat) || isNaN(lng)) {
+                    console.error(`❌ Invalid numeric values for latitude or longitude: [${row.latitude}, ${row.longitude}]`);
+                    return;
+                }
+    
                 if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
-                    console.warn(`🚨 Invalid point coordinate: [${lng}, ${lat}]. Swapping...`);
+                    console.warn(`🚨 Invalid point coordinate detected: [${lng}, ${lat}]. Swapping...`);
                     [lat, lng] = [lng, lat];
                 }
-
+    
                 if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+                    const properties = Object.fromEntries(
+                        Object.entries(row).filter(
+                            ([key, value]) => typeof value === "string" || typeof value === "number" || typeof value === "boolean"
+                        )
+                    );
+    
+                    properties.name = properties.name || `Point ${features.length + 1}`;
+    
                     features.push({
                         type: "Feature",
                         geometry: {
                             type: "Point",
                             coordinates: [lng, lat],
                         },
-                        properties: row,
+                        properties,
                     });
                 } else {
                     console.error(`❌ Skipping invalid point: [${lng}, ${lat}]`);
                 }
             }
         });
-
+    
         const geoJSON: FeatureCollection = {
             type: "FeatureCollection",
             features,
         };
-
-        setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
+    
         console.log(`✅ Uploaded ${source} as GeoJSON:`, geoJSON);
+        setGeoJSONDataList((prevData) => [...prevData, geoJSON]);
     };
-
+    
     const handleRemoveDataset = (index: number) => {
         setGeoJSONDataList((prevData) => prevData.filter((_, i) => i !== index));
-        onRemoveImage(); // Call the onRemoveImage function to remove the image overlay
+        onRemoveImage(); 
     };
 
     return (
