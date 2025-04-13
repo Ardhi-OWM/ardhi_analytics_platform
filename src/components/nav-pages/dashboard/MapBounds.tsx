@@ -2,55 +2,60 @@ import { useEffect } from "react";
 import { useMap } from "react-leaflet";
 import * as L from "leaflet";
 import { GeoJsonObject } from "geojson";
-import { kml as kmlToGeoJSON } from "@tmcw/togeojson";
+import { kml as convertKMLToGeoJSON } from "@tmcw/togeojson";
 
-const MapBounds: React.FC<{ geoJSONDataList?: GeoJsonObject[]; kmlFileUrl?: string }> = ({ geoJSONDataList = [], kmlFileUrl }) => {
-    const map = useMap();
+interface MapBoundsProps {
+  geoJSONDataList?: GeoJsonObject[];
+  kmlFileUrl?: string;
+}
 
-    useEffect(() => {
-        if (!map) return;
+const MapBounds: React.FC<MapBoundsProps> = ({ geoJSONDataList = [], kmlFileUrl }) => {
+  const map = useMap();
 
-        const allBounds: L.LatLngBounds[] = [];
+  useEffect(() => {
+    if (!map) return;
 
-        //  Handle GeoJSON Bounds (DO NOT ADD LAYERS)
-        if (geoJSONDataList.length > 0) {
-            geoJSONDataList.forEach((geoJSON) => {
-                const layer = L.geoJSON(geoJSON as GeoJsonObject);
-                const bounds = layer.getBounds();
-                if (bounds.isValid()) allBounds.push(bounds);
-            });
-        }
+    const boundsList: L.LatLngBounds[] = [];
 
-        if (kmlFileUrl) {
-            console.log("Fetching KML File:", kmlFileUrl);
-            
-            fetch(kmlFileUrl)
-                .then((res) => res.text())
-                .then((kmlText) => {
-                    const parser = new DOMParser();
-                    const kml = parser.parseFromString(kmlText, "application/xml");
-                    const geoJSONData = kmlToGeoJSON(kml);
+    geoJSONDataList.forEach((geoJSON) => {
+      const layer = L.geoJSON(geoJSON);
+      const bounds = layer.getBounds();
+      if (bounds.isValid()) boundsList.push(bounds);
+    });
 
-                    if (geoJSONData) {
-                        const layer = L.geoJSON(geoJSONData);
-                        const bounds = layer.getBounds();
-                        if (bounds.isValid()) allBounds.push(bounds);
-                    }
-                })
-                .catch((err) => console.error("Error loading KML file:", err));
-        }
+    const loadKML = async () => {
+      try {
+        const response = await fetch(kmlFileUrl!);
+        const kmlText = await response.text();
+        const kmlDoc = new DOMParser().parseFromString(kmlText, "application/xml");
+        const geoJSON = convertKMLToGeoJSON(kmlDoc);
 
-        if (allBounds.length > 0) {
-            const mergedBounds = allBounds.reduce((acc, bounds) => acc.extend(bounds), allBounds[0]);
-            if (mergedBounds.isValid()) {
-                map.fitBounds(mergedBounds);
-            }
-        }
-    }, [geoJSONDataList, kmlFileUrl, map]);
+        const layer = L.geoJSON(geoJSON);
+        const bounds = layer.getBounds();
+        if (bounds.isValid()) boundsList.push(bounds);
 
-    return null;
+        fitToBounds();
+      } catch (error) {
+        console.error("Error loading KML file:", error);
+      }
+    };
+
+    const fitToBounds = () => {
+      if (boundsList.length > 0) {
+        const combinedBounds = boundsList.reduce((acc, b) => acc.extend(b), boundsList[0]);
+        if (combinedBounds.isValid()) map.fitBounds(combinedBounds);
+      }
+    };
+
+    if (kmlFileUrl) {
+      loadKML();
+    } else {
+      fitToBounds();
+    }
+
+  }, [geoJSONDataList, kmlFileUrl, map]);
+
+  return null;
 };
 
 export default MapBounds;
-
-
