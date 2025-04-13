@@ -12,7 +12,7 @@ import { mapLayers } from "@/components/constants";
 
 
 const SearchControl = dynamic(
-    () => import("@/components/nav-pages/dashboard/db_functions"),
+    () => import("@/components/nav-pages/dashboard/SearchControl"),
     { ssr: false }
 );
 

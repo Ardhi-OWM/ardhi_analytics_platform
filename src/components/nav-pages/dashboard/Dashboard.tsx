@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const SearchControl = dynamic(
-  () => import("@/components/nav-pages/dashboard/db_functions"),
+  () => import("@/components/nav-pages/dashboard/SearchControl"),
   { ssr: false }
 );
 const MapBounds = dynamic(
