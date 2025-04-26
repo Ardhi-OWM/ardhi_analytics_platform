@@ -1,39 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ardhi Analytics 🌍
 
-This branch works on adding georeferenced images functionality
+**Ardhi Analytics** is a next-generation geospatial platform that empowers users to visualize, convert, and manage spatial data with ease.
+Designed for researchers, developers, urban planners, and data scientists, Ardhi combines the power of GIS technologies with a modern, intuitive user interface.
+Whether you're uploading datasets, editing geospatial features, or converting formats for analysis, Ardhi Analytics delivers a complete cloud-based solution for your spatial needs — fast, flexible, and future-ready.
+Built with **Next.js**, **TypeScript**, **Python/Django**, and **PostgreSQL**, Ardhi provides users with a seamless experience for interacting with GIS cloud models, datasets, and geospatial tools — all in one platform.
 
-## Getting Started
+## Features
 
-First, run the development server:
+- 🌐 **Dashboard** — Upload and visualize geospatial datasets on a dynamic OpenStreetMap.
+- ☁️ **Models/Datasets Connector** — Connect to external GIS models and datasets with easy management.
+- 🔄 **Data Converter** — Seamlessly convert geospatial and tabular files into different formats.
+- 🛠️ **Geo-Tools**  —  
+  - Create and edit geospatial features.
+  - Interact with Ardhi's integrated AI assistant for GIS-related tasks.
+
+## Tech Stack
+
+- **Frontend**: Next.js, TypeScript, CSS
+- **Mapping Library**: Leaflet.js (OpenStreetMap)
+- **Authentication**: Clerk.dev
+- **Backend**: Python (Django)
+- **Database**: PostgreSQL
+- **Hosting**:
+  - Frontend on **Netlify**
+  - Backend on **Render**
+
+
+## Screenshots
+
+### Dashboard - Visualize Your Data
+![Dashboard](https://github.com/user-attachments/assets/f99281fa-c448-4f56-898e-19f8afa94e63)
+
+
+
+### Models & Datasets - Connect Cloud Data
+![Models and Datasets](https://github.com/user-attachments/assets/50a483e6-de1a-490a-8f29-c12e9dece455)
+
+
+
+### Data Converter - Format Your Files
+![Converter](https://github.com/user-attachments/assets/900c1d5e-4b31-497a-b260-7118598b600b)
+
+
+---
+### Geo Tools (Feature creation and Ardhi chat)
+![Geo Tools](https://github.com/user-attachments/assets/805a7884-e2da-452c-8d74-4e5cbbd969c2)
+
+
+## How to Run Locally
+
+1. **Clone the repo**
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/your-username/ardhi-analytics.git
+cd ardhi_analytics_platform
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Setup Frontend**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cd frontend
+npm install/nvm install 20.0.0
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Frontend available at [http://localhost:3000](http://localhost:3000).
+---
 
-## Learn More
+## Upcoming 🔥
 
-To learn more about Next.js, take a look at the following resources:
+- **Ardhi AI Chat** for intelligent geospatial queries and insights
+- More file format support and bulk processing!
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
+© 2025 Ardhi Analytics. All rights reserved.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# ardhi_supabase_Clerk
