@@ -47,7 +47,7 @@ export default function NavigationMenuPage() {
   return (
     <div className="flex flex-col min-h-screen justify-center items-center">
       <div className="flex flex-col items-center justify-center mb-8 ">
-        <h1 className="text-2xl font-bold mb-6 mx-3 text-gray-400">
+        <h1 className="text-3xl font-bold mt-16 mb-6 text-gray-800">
           Welcome to the WebGIS Platform of
           {" "}
           <span className="inline-block relative ml-1">
@@ -60,23 +60,50 @@ export default function NavigationMenuPage() {
             />
           </span></h1>
         <div className="flex space-x-4">
-          <Link href="/dashboard"
-            passHref
-            className="px-4 flex items-center space-x-2 text-xs ">
-            <span className="align-middle underline underline-offset-4 text-green-500 hover:text-green-300 ">TO DASHBOARD</span>
-            <MoveUpRight className="w-4 h-4 align-middle text-green-500 hover:text-green-300 " />
-          </Link>
-          <Link
-            href="https://ardhi.de"
-            passHref
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 flex items-center space-x-2 text-xs"
-          >
-            <span className="align-middle underline underline-offset-4 text-green-500 hover:text-green-300 ">TO ARDI LANDING PAGE </span>
-            <MoveUpRight className="w-4 h-4 align-middle text-green-500 hover:text-green-300 " />
-          </Link>
+        <Link
+          href="/dashboard"
+          passHref
+          className="px-4 flex items-center space-x-2 text-sm" 
+        >
+          <span className="align-middle underline underline-offset-4 text-green-500 hover:text-green-300">
+            TO DASHBOARD
+          </span>
+          <MoveUpRight className="w-4 h-4 align-middle text-green-500 hover:text-green-300" />
+        </Link>
+
+        <Link
+          href="https://ardhi.de"
+          passHref
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-4 flex items-center space-x-2 text-sm" 
+        >
+          <span className="align-middle underline underline-offset-4 text-green-500 hover:text-green-300">
+            TO ARDI LANDING PAGE
+          </span>
+          <MoveUpRight className="w-4 h-4 align-middle text-green-500 hover:text-green-300" />
+        </Link>
+
         </div>
+
+        <div className="w-full max-w-4xl mt-8 px-4 text-gray-700 text-center">
+          {/* <h2 className="text-3xl font-bold mb-6 text-gray-800">Empowering Geospatial Insight for All</h2> */}
+            <p className="text-lg mb-4">
+              At <strong>Ardhi Analytics</strong>, our mission is to empower decision-makers, geo-developers, researchers, and industry leaders with a WebGIS platform that makes geodata visualization and transformation seamless.
+              We deliver <strong>fast, flexible, and lightweight analytics</strong> through an intuitive interface—enabling both technical and non-technical teams to access meaningful insights from complex geospatial data with ease.
+            </p>
+            <ul className="text-left list-disc list-inside text-base mb-4 max-w-2xl mx-auto">
+              <li>Bridge the gap between data and action by democratizing access to analytics results</li>
+              <li>Support diverse data formats like GeoJSON, GeoTIFF, CSV, and more</li>
+              <li>Integrate smoothly with cloud infrastructure and streamline geospatial workflows</li>
+              <li>Foster innovation in the geospatial sector by making powerful tools accessible to all</li>
+            </ul>
+            <p className="text-lg">
+              Whether you're building cloud-native tools or exploring spatial patterns, Ardhi empowers you to do more—with less friction.
+            </p>
+        
+        </div>
+
 
       </div>
 
@@ -85,7 +112,7 @@ export default function NavigationMenuPage() {
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
-                <NavigationMenuTrigger> Funding </NavigationMenuTrigger>
+              <NavigationMenuTrigger className="text-base">Funding</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
                     <li className="row-span-3">
@@ -117,7 +144,7 @@ export default function NavigationMenuPage() {
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Components</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-base">Components</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
                     {components.map((component) => (
@@ -132,19 +159,24 @@ export default function NavigationMenuPage() {
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>
-              <NavigationMenuItem>
+              <NavigationMenuItem className="text-base">
                 <Link href="/docs" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Documentation
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
+
             </NavigationMenuList>
           </NavigationMenu>
         </div>
         <div>
         </div>
+
+        
       </div>
+
+      
       {/* HR line for the logos */}
       <div className="flex justify-center items-center w-full mt-16">
         <div className="w-full sm:w-1/3 flex items-center relative">
