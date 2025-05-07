@@ -2,16 +2,21 @@ import React from "react";
 
 const DocsPage = () => {
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12 text-gray-800 mt-18">
-        <h1 className="text-4xl text-green-500 font-bold mb-6">Ardhi Analytics Documentation</h1>
+    <div className="min-h-screen flex items-center justify-center bg-white mt-18">
+    <div className="max-w-6xl w-full px-6 py-12 text-gray-800">
+    <h1 className="text-4xl text-green-500 font-bold mb-6 text-center">Ardhi Analytics Documentation</h1>
 
         <h2 className="text-2xl text-green-500 font-semibold mt-8 mb-4">Overview</h2>
         <p className="mb-4">
-            Ardhi Analytics is a next-generation geospatial platform designed to empower users—researchers, developers, urban planners, and data scientists—to visualize, convert, and manage spatial data with ease. Ardhi combines advanced GIS technologies with a modern, intuitive interface to simplify geospatial workflows in the cloud.
+        Ardhi Analytics is a next-generation geospatial platform designed to empower users—researchers, developers, urban planners, environmental scientists, and data analysts—to visualize, convert, and manage spatial data with ease. Ardhi combines advanced GIS technologies with a modern, intuitive interface to simplify geospatial workflows in the cloud.
         </p>
         <p className="mb-4">
-            Built with flexibility and scalability in mind, Ardhi provides powerful tools for real-time data analysis, AI-assisted editing, format conversion, and seamless model integration. Whether you're uploading datasets, editing geospatial features, or collaborating on spatial intelligence, Ardhi enables data-driven decision making across sectors.
+        Built with flexibility and scalability in mind, Ardhi provides powerful tools for real-time data analysis, AI-assisted feature editing, data format conversion, and seamless model integration. Whether you're uploading large spatial datasets, editing complex geospatial features, or collaborating with stakeholders across sectors, Ardhi enables data-driven decision-making through an accessible web platform.
         </p>
+        <p className="mb-4">
+        Ardhi supports a wide range of geospatial formats and integrates with popular mapping frameworks like Leaflet.js. It offers a secure environment for managing organizational datasets, facilitating remote access to spatial tools, and streamlining workflows for field teams and analysts alike. With its emphasis on openness and extensibility, Ardhi is ideal for smart city planning, environmental monitoring, infrastructure development, disaster response, and educational use cases.
+        </p>
+
 
         <h2 className="text-2xl text-green-500 font-semibold mt-8 mb-4">Features</h2>
         <ul className="list-disc list-inside mb-4">
@@ -56,14 +61,39 @@ const DocsPage = () => {
         </ol>
 
         <h2 className="text-2xl text-green-500 font-semibold mt-8 mb-4">Usage</h2>
-        <p className="mb-4">
-            Once logged in, users can navigate to the dashboard to upload spatial datasets, view results over interactive maps, convert files to supported formats, and interact with AI-based tools to summarize or edit data. Organizations can also generate secure access codes for trainees or partners to access specific course content and datasets.
-        </p>
+            <p className="mb-4">
+            Once logged in, users land on the main dashboard—a central hub where geospatial workflows begin. From here, users can:
+            </p>
+            <ul className="list-disc list-inside mb-4 space-y-2">
+            <li><strong>Upload spatial datasets</strong> such as GeoJSON, Shapefiles, CSVs, or raster files for quick visualization and inspection on an interactive OpenStreetMap view.</li>
+            <li><strong>Convert data formats</strong> across supported geospatial and tabular types using the built-in converter, enabling interoperability across GIS platforms.</li>
+            <li><strong>Edit geospatial features</strong> directly via map-based tools or use AI-powered assistants to summarize metadata, detect anomalies, or assist with schema standardization.</li>
+            <li><strong>Generate and manage access codes</strong> for organizations—allowing project collaborators, trainees, or external analysts to access predefined datasets and courses securely and temporarily.</li>
+            </ul>
+            <p className="mb-4">
+            All interactions are logged and can be traced for audit or reporting purposes. Whether you're managing assets in urban planning or modeling environmental impacts, Ardhi Analytics provides a unified, modern interface to simplify complex spatial workflows.
+            </p>
+
 
         <h2 className="text-2xl text-green-500 font-semibold mt-8 mb-4">Support & Community</h2>
         <p className="mb-4">
             Ardhi is part of the Prototype Fund and supported by the Open Knowledge Foundation and BMBF. Join our community on GitHub to contribute, file issues, and collaborate.
         </p>
+        <h2 className="text-2xl text-green-500 font-semibold mt-8 mb-4">Contact</h2>
+        <p className="mb-2"> For support, contributions, or collaboration inquiries, feel free to reach out:</p>
+        <ul className="list-none space-y-2">
+        <li>
+            <strong>Project Lead:</strong> <a href="ardhi.ochwuma@gmail.com" className="text-blue-600 underline">ardhi.ochwuma@gmail.com</a>
+        </li>
+        <li>
+            <strong>GitHub:</strong> <a href="https://github.com/Ardhi-OWM/ardhi_analytics_platform.git" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">https://github.com/Ardhi-OWM/ardhi_analytics_platform.git</a>
+        </li>
+        <li>
+            <strong>Website:</strong> <a href="https://ardhi.de" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">https://ardhi.de</a>
+        </li>
+        </ul>
+
+    </div>
     </div>
   );
 };
