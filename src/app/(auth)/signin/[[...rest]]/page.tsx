@@ -23,7 +23,7 @@ export default function SignInPage() {
             <SignIn
                 routing="path"
                 path="/signin"
-                forceRedirectUrl="/dashboard"
+                forceRedirectUrl="/#"
                 appearance={{
                     elements: { footer: "hidden", formButtonPrimary: "bg-green-700" },
                 }}
