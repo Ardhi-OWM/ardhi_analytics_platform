@@ -76,5 +76,5 @@ Frontend available at [http://localhost:3000](http://localhost:3000).
 
 ## License
 
-© 2025 Ardhi Analytics. All rights reserved.
+This project is licensed under the **MIT License**.
 
